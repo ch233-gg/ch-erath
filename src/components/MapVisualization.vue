@@ -3,6 +3,13 @@
     <!-- 图层控制面板 -->
     <div id="controls">
       <h3>图层控制</h3>
+      <!-- 添加清除按钮 -->
+      <div class="clear-button-container">
+        <button class="clear-button" @click="clearAllLayers" :disabled="!activeLayers.length">
+          <span class="clear-icon">🗑️</span>
+          <span>清除所有图层</span>
+        </button>
+      </div>
       <ul>
         <li v-for="(group, index) in layerGroups" :key="index">
           <!-- 显示分组标题 -->
@@ -229,6 +236,16 @@ const getRandomColor = () => {
   return color;
 };
 
+// 添加清除所有图层的方法
+const clearAllLayers = () => {
+  // 遍历所有激活的图层并移除
+  activeLayers.value.forEach(layerName => {
+    removeLayer(layerName);
+  });
+  // 清空激活图层数组
+  activeLayers.value = [];
+};
+
 // 初始化地图并加载底图
 onMounted(() => {
   nextTick(() => {
@@ -370,5 +387,42 @@ onMounted(() => {
   &:hover {
     color: #2d3748;
   }
+}
+
+/* 添加清除按钮容器样式 */
+.clear-button-container {
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.clear-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  background: #f5f6f7;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+  font-size: 13px;
+}
+
+.clear-button:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.clear-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clear-icon {
+  margin-right: 6px;
+  font-size: 16px;
 }
 </style>

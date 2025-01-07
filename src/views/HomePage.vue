@@ -15,10 +15,6 @@
           <span class="btn-icon">📋</span>
           <span class="btn-text">文件列表</span>
         </div>
-        <div class="control-btn" @click="toggleFileDetails">
-          <span class="btn-icon">📄</span>
-          <span class="btn-text">文件详情</span>
-        </div>
         <div class="control-btn" @click="toggleMap">
           <span class="btn-icon">🗺️</span>
           <span class="btn-text">地图显示</span>
@@ -29,7 +25,6 @@
       <div class="panel-content" v-if="showAnyComponent">
         <FileUpload v-if="showFileUpload" />
         <FilePagination v-if="showFilePagination" />
-        <FileDetails v-if="showFileDetails" />
       </div>
     </div>
   </div>
@@ -39,38 +34,27 @@
 import { ref, computed } from 'vue';
 import FileUpload from '@/components/FileUpload.vue';
 import FilePagination from '@/components/FilePagination.vue';
-import FileDetails from '@/components/FileDetails.vue';
 import MapVisualization from '@/components/MapVisualization.vue';
 
 const showFileUpload = ref(false);
 const showFilePagination = ref(false);
-const showFileDetails = ref(false);
 const showMap = ref(true);
 
 // 计算是否显示任何组件
 const showAnyComponent = computed(() => 
-  showFileUpload.value || showFilePagination.value || showFileDetails.value
+  showFileUpload.value || showFilePagination.value
 );
 
 // 切换文件上传组件
 const toggleFileUpload = () => {
   showFileUpload.value = !showFileUpload.value;
   showFilePagination.value = false;
-  showFileDetails.value = false;
 };
 
 // 切换文件分页展示组件
 const toggleFilePagination = () => {
   showFilePagination.value = !showFilePagination.value;
   showFileUpload.value = false;
-  showFileDetails.value = false;
-};
-
-// 切换文件详情展示组件
-const toggleFileDetails = () => {
-  showFileDetails.value = !showFileDetails.value;
-  showFileUpload.value = false;
-  showFilePagination.value = false;
 };
 
 // 切换地图显示
@@ -128,11 +112,12 @@ const toggleMap = () => {
 }
 
 .control-btn {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 10px 8px;
   background: #f5f7fa;
   border: 1px solid #e4e7ed;
   border-radius: 6px;
