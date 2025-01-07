@@ -49,6 +49,12 @@
         </li>
       </ul>
     </div>
+    
+    <!-- 添加 AI 对话框 -->
+    <AIChatBox 
+      :map="map"
+      @toggleLayers="handleToggleLayers"
+    />
   </div>
 </template>
 
@@ -56,6 +62,7 @@
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { ref, onMounted, nextTick } from "vue";
+import AIChatBox from './AIChatBox.vue';
 
 // Mapbox 相关初始化
 mapboxgl.accessToken =
@@ -282,6 +289,19 @@ const clearAllLayers = () => {
   });
   // 清空激活图层数组
   activeLayers.value = [];
+};
+
+// 处理图层切换
+const handleToggleLayers = (layerNames) => {
+  layerNames.forEach(name => {
+    const layer = layerGroups.value[0].layers.find(l => l.name === name);
+    if (layer) {
+      if (!activeLayers.value.includes(name)) {
+        activeLayers.value.push(name);
+        addLayer(layer);
+      }
+    }
+  });
 };
 
 // 初始化地图并加载底图
