@@ -2,7 +2,7 @@
   <div id="map" ref="mapContainer">
     <!-- 图层控制面板 -->
     <div id="controls">
-      <h3>图层控制</h3>
+      <h3>专题底图数据</h3>
       <!-- 添加清除按钮 -->
       <div class="clear-button-container">
         <button class="clear-button" @click="clearAllLayers" :disabled="!activeLayers.length">
@@ -10,14 +10,31 @@
           <span>清除所有图层</span>
         </button>
       </div>
+      <!-- 底图选择下拉框 -->
+      <div class="basemap-selector">
+        <div class="selector-header" @click="toggleBasemapList">
+          <span>底图选择</span>
+          <span class="arrow">{{ showBasemapList ? '▼' : '▶' }}</span>
+        </div>
+        <div class="basemap-list" v-show="showBasemapList">
+          <div 
+            v-for="map in basemaps" 
+            :key="map.id"
+            class="basemap-item"
+            :class="{ active: currentBasemap === map.id }"
+            @click="changeBasemap(map.id)"
+          >
+            {{ map.name }}
+          </div>
+        </div>
+      </div>
+      <!-- 专题图层列表 -->
       <ul>
         <li v-for="(group, index) in layerGroups" :key="index">
-          <!-- 显示分组标题 -->
           <div @click="toggleGroup(index)" class="group-title">
             <strong>{{ group.title }}</strong>
             <span>{{ group.expanded ? "-" : "+" }}</span>
           </div>
-          <!-- 显示组内的图层 -->
           <ul v-show="group.expanded" class="layer-list">
             <li v-for="layer in group.layers" :key="layer.name">
               <input
@@ -50,70 +67,63 @@ const activeLayers = ref([]); // 当前激活的图层数组
 // 图层分组配置
 const layerGroups = ref([
   {
-    title: "WFS 图层",
-    expanded: false, // 控制分组展开/折叠
+    title: "专题地图数据",
+    expanded: false,
     layers: [
       {
-        name: "Asian Land",
+        name: "亚洲陆地",
         url: "http://172.21.252.158:8181/geoserver/geoData/ows",
         type: "WFS",
         layerName: "geoData:Asian land",
       },
       {
-        name: "Asian Ocean Polygon",
+        name: "亚洲海洋",
         url: "http://172.21.252.158:8181/geoserver/geoData/ows",
         type: "WFS",
         layerName: "geoData:AsianOceanpolygon",
       },
       {
-        name: "Asian Delta",
+        name: "三角洲",
         url: "http://172.21.252.158:8181/geoserver/geoData/ows",
         type: "WFS",
         layerName: "geoData:Asiandelta",
       },
       {
-        name: "Asian Climate and Landforms",
+        name: "亚洲气候与地貌",
         url: "http://172.21.252.158:8181/geoserver/geoData/ows",
         type: "WFS",
         layerName: "geoData:AsianClimateAndLandforms",
       },
       {
-        name: "Asian Climate Water",
+        name: "亚洲气候水文",
         url: "http://172.21.252.158:8181/geoserver/geoData/ows",
         type: "WFS",
         layerName: "geoData:AsianClimateWater",
       },
       {
-        name: "Asian Climate Line",
+        name: "亚洲气候线",
         url: "http://172.21.252.158:8181/geoserver/geoData/ows",
         type: "WFS",
         layerName: "geoData:AsianClimateLine",
       },
       {
-        name: "Asian Climate Polygon",
+        name: "亚洲气候多边形",
         url: "http://172.21.252.158:8181/geoserver/geoData/ows",
         type: "WFS",
         layerName: "geoData:AsianClimatePolygon",
       },
       {
-        name: "Main Plates",
+        name: "主板块",
         url: "http://172.21.252.158:8181/geoserver/geoData/ows",
         type: "WFS",
         layerName: "geoData:MainPlates",
       },
       {
-        name: "Sub Plates",
+        name: "亚板块",
         url: "http://172.21.252.158:8181/geoserver/geoData/ows",
         type: "WFS",
         layerName: "geoData:SubPlates",
       },
-   
-    ],
-  },
-  {
-    title: "WMS 图层",
-    expanded: false,
-    layers: [
       {
         name: "全球活动构造板块及其边界带数据集(2022年)",
         url: "http://172.21.252.158:8181/geoserver/geoData/wms?service=WMS&version=1.1.0&request=GetMap&layers=geoData%3Aplates&bbox=-181.8000030517578%2C-90.89899444580078%2C181.8000030517578%2C90.89999389648438&width=768&height=383&srs=EPSG%3A4326&styles=&format=image%2Fpng",
@@ -137,6 +147,34 @@ const layerGroups = ref([
     ],
   },
 ]);
+
+// 添加底图相关状态
+const showBasemapList = ref(false);
+const currentBasemap = ref('streets');
+
+// 底图配置
+const basemaps = [
+  { id: 'streets', name: '街道地图', style: 'mapbox://styles/mapbox/streets-v12' },
+  { id: 'satellite', name: '卫星影像', style: 'mapbox://styles/mapbox/satellite-v9' },
+  { id: 'light', name: '浅色底图', style: 'mapbox://styles/mapbox/light-v11' },
+  { id: 'dark', name: '深色底图', style: 'mapbox://styles/mapbox/dark-v11' },
+  { id: 'outdoors', name: '地形图', style: 'mapbox://styles/mapbox/outdoors-v12' }
+];
+
+// 切换底图列表显示
+const toggleBasemapList = () => {
+  showBasemapList.value = !showBasemapList.value;
+};
+
+// 切换底图
+const changeBasemap = (mapId) => {
+  const selectedMap = basemaps.find(m => m.id === mapId);
+  if (selectedMap) {
+    map.value.setStyle(selectedMap.style);
+    currentBasemap.value = mapId;
+  }
+  showBasemapList.value = false;
+};
 
 // 初始化 Mapbox 地图
 const initializeMap = () => {
@@ -424,5 +462,51 @@ onMounted(() => {
 .clear-icon {
   margin-right: 6px;
   font-size: 16px;
+}
+
+/* 添加底图选择器样式 */
+.basemap-selector {
+  margin-bottom: 16px;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f6f8fa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selector-header:hover {
+  background: #ecf5ff;
+}
+
+.arrow {
+  font-size: 12px;
+  color: #909399;
+}
+
+.basemap-list {
+  background: #fff;
+}
+
+.basemap-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.basemap-item:hover {
+  background: #f5f7fa;
+}
+
+.basemap-item.active {
+  background: #ecf5ff;
+  color: #409eff;
 }
 </style>
