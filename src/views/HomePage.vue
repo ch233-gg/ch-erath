@@ -105,9 +105,10 @@ const toggleMap = () => {
 }
 
 .control-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 16px;
 }
 
