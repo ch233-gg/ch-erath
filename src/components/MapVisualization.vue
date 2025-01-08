@@ -1,19 +1,15 @@
 <template>
   <div id="map" ref="mapContainer">
-    <!-- 美化后的重置视图按钮 -->
-    <div class="reset-view-container">
-      <button class="reset-view-btn" @click="resetView" title="重置视图">
-        <div class="btn-content">
-          <svg class="reset-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 4V2M12 4C7.58172 4 4 7.58172 4 12M12 4C16.4183 4 20 7.58172 20 12M12 20V22M12 20C7.58172 20 4 16.4183 4 12M12 20C16.4183 20 20 16.4183 20 12M2 12H4M20 12H22" 
-                  stroke="currentColor" 
-                  stroke-width="2" 
-                  stroke-linecap="round"/>
-          </svg>
-          <span class="btn-text">重置视图</span>
-        </div>
-        <div class="btn-backdrop"></div>
-      </button>
+    <!-- 重置视图图标 -->
+    <div class="reset-view-icon" @click="resetView" title="重置视图">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g class="globe-paths">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 3C12 3 8 7 8 12C8 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 3C12 3 16 7 16 12C16 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </g>
+      </svg>
     </div>
 
     <!-- 图层控制面板 -->
@@ -557,92 +553,47 @@ onMounted(() => {
 }
 
 /* 重置视图按钮样式 */
-.reset-view-container {
+.reset-view-icon {
   position: absolute;
   top: 20px;
   left: 20px;
-  z-index: 1000;
-}
-
-.reset-view-btn {
-  position: relative;
-  background: rgba(255, 255, 255, 0.95);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
-  font-family: system-ui, -apple-system, sans-serif;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 1000;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  color: #3B82F6;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
 }
 
-.btn-content {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 1;
-}
-
-.reset-icon {
-  width: 20px;
-  height: 20px;
-  color: #3b82f6;
-  transition: transform 0.5s ease;
-}
-
-.btn-text {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-  transition: color 0.3s ease;
-}
-
-.btn-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
+.reset-view-icon svg {
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.1),
-    rgba(37, 99, 235, 0.1)
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
 }
 
-/* 悬浮效果 */
-.reset-view-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+.reset-view-icon:hover {
+  transform: scale(1.1) rotate(180deg);
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4));
 }
 
-.reset-view-btn:hover .reset-icon {
-  transform: rotate(180deg);
-  color: #2563eb;
+.reset-view-icon:active {
+  transform: scale(0.95) rotate(180deg);
 }
 
-.reset-view-btn:hover .btn-text {
-  color: #2563eb;
+/* 添加笔画动画效果 */
+.globe-paths {
+  stroke-dasharray: 100;
+  animation: drawGlobe 2s ease-out forwards;
 }
 
-.reset-view-btn:hover .btn-backdrop {
-  opacity: 1;
-}
-
-/* 点击效果 */
-.reset-view-btn:active {
-  transform: translateY(0);
-  box-shadow: 
-    0 2px 4px -1px rgba(0, 0, 0, 0.1),
-    0 1px 2px -1px rgba(0, 0, 0, 0.05);
+@keyframes drawGlobe {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* 添加毛玻璃效果 */
