@@ -135,13 +135,54 @@
             <span class="close-icon">×</span>
           </button>
         </div>
+        
         <div class="viewer-content">
-          <iframe 
-            v-if="currentBook.url"
-            :src="currentBook.url"
-            frameborder="0"
-            class="book-iframe"
-          ></iframe>
+          <!-- 切换按钮组 -->
+          <div class="content-tabs">
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'info' }"
+              @click="activeTab = 'info'"
+            >
+              书籍信息
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'text' }"
+              @click="activeTab = 'text'"
+            >
+              文字内容
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'image' }"
+              @click="activeTab = 'image'"
+            >
+              图片展示
+            </button>
+          </div>
+          
+          <!-- 内容显示区域 -->
+          <div class="content-display">
+            <iframe 
+              v-if="activeTab === 'info' && currentBook.infoUrl"
+              :src="currentBook.infoUrl"
+              frameborder="0"
+              class="content-iframe"
+            ></iframe>
+            <iframe 
+              v-if="activeTab === 'text' && currentBook.textUrl"
+              :src="currentBook.textUrl"
+              frameborder="0"
+              class="content-iframe"
+            ></iframe>
+            <iframe 
+              v-if="activeTab === 'image' && currentBook.imageUrl"
+              :src="currentBook.imageUrl"
+              frameborder="0"
+              class="content-iframe"
+            ></iframe>
+          </div>
         </div>
       </div>
     </div>
@@ -597,6 +638,9 @@ const toggleFilePagination = () => {
 const toggleMap = () => {
   showMap.value = !showMap.value;
 };
+
+// 添加活动标签状态
+const activeTab = ref('info');  // 默认显示书籍信息
 </script>
 
 <style scoped>
@@ -1104,13 +1148,75 @@ const toggleMap = () => {
 
 .viewer-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
-.book-iframe {
+.content-tabs {
+  padding: 16px 16px 0;
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  
+  &:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+  
+  &.active {
+    background: #fff;
+    color: #3b82f6;
+    border-color: #e5e7eb;
+    margin-bottom: -1px;
+    border-bottom: 1px solid #fff;
+  }
+}
+
+.content-display {
+  flex: 1;
+  padding: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.content-iframe {
   width: 100%;
   height: 100%;
   border: none;
+  border-radius: 8px;
+  background: #fff;
+}
+
+/* 自定义滚动条 */
+.viewer-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.viewer-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.viewer-content::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+
+.viewer-content::-webkit-scrollbar-thumb:hover {
+  background: #909399;
 }
 
 /* 响应式设计 */
