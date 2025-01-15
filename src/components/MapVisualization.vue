@@ -1,111 +1,163 @@
 <template>
-  <div id="map" ref="mapContainer">
-    <!-- 测量工具栏 -->
-    <div class="measure-toolbar">
-      <button 
-        class="measure-btn"
-        @click="toggleMeasurement('distance')"
-        :class="{ active: currentTool === 'distance' }"
-      >
-        <span class="icon">📏</span>
-        <span>测距</span>
-      </button>
-      <button 
-        class="measure-btn"
-        @click="toggleMeasurement('area')"
-        :class="{ active: currentTool === 'area' }"
-      >
-        <span class="icon">⬡</span>
-        <span>测面</span>
-      </button>
-      <button 
-        class="measure-btn"
-        @click="clearMeasurements"
-      >
-        <span class="icon">🗑️</span>
-        <span>清除</span>
-      </button>
-    </div>
-
-    <!-- 重置视图图标 -->
-    <div class="reset-view-icon" @click="resetView" title="重置视图">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g class="globe-paths">
-          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-          <path d="M12 3C12 3 8 7 8 12C8 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M12 3C12 3 16 7 16 12C16 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </g>
-      </svg>
-    </div>
-
-    <!-- 图层控制面板 -->
-    <div id="controls">
-      <h3>专题底图数据</h3>
-      <!-- 添加清除按钮 -->
-      <div class="clear-button-container">
-        <button class="clear-button" @click="clearAllLayers" :disabled="!activeLayers.length">
-          <span class="clear-icon">🗑️</span>
-          <span>清除所有图层</span>
-        </button>
-      </div>
-      <!-- 底图选择下拉框 -->
-      <div class="basemap-selector">
-        <div class="selector-header" @click="toggleBasemapList">
-          <span>底图选择</span>
-          <span class="arrow">{{ showBasemapList ? '▼' : '▶' }}</span>
+  <div class="map-container">
+    <!-- 左上角功能控制组件 -->
+    <div class="top-controls">
+      <div class="control-buttons">
+        <div class="control-btn" @click="toggleFileUpload">
+          <span class="btn-icon">📤</span>
+          <span class="btn-text">文件上传</span>
         </div>
-        <div class="basemap-list" v-show="showBasemapList">
-          <div 
-            v-for="map in basemaps" 
-            :key="map.id"
-            class="basemap-item"
-            :class="{ active: currentBasemap === map.id }"
-            @click="changeBasemap(map.id)"
-          >
-            {{ map.name }}
-          </div>
+        <div class="control-btn" @click="toggleFilePagination">
+          <span class="btn-icon">📋</span>
+          <span class="btn-text">文件列表</span>
+        </div>
+        <div class="control-btn" @click="toggleMap">
+          <span class="btn-icon">🗺️</span>
+          <span class="btn-text">地图显示</span>
         </div>
       </div>
-      <!-- 专题图层列表 -->
-      <ul>
-        <li v-for="(group, index) in layerGroups" :key="index">
-          <div @click="toggleGroup(index)" class="group-title">
-            <strong>{{ group.title }}</strong>
-            <span>{{ group.expanded ? "-" : "+" }}</span>
-          </div>
-          <ul v-show="group.expanded" class="layer-list">
-            <li v-for="layer in group.layers" :key="layer.name">
-              <input
-                type="checkbox"
-                :value="layer.name"
-                v-model="activeLayers"
-                @change="toggleLayer(layer)"
-              />
-              <label>{{ layer.name }}</label>
-            </li>
-          </ul>
-        </li>
-      </ul>
+      
+      <!-- 显示的组件 -->
+      <div class="panel-content" v-if="showAnyComponent">
+        <FileUpload v-if="showFileUpload" />
+        <FilePagination v-if="showFilePagination" />
+      </div>
     </div>
-    
-    <!-- 添加 AI 对话框 -->
-    <AIChatBox 
-      v-if="map"
-      :map="map"
-      @toggleLayers="handleToggleLayers"
-    />
+
+    <!-- 添加分屏容器 -->
+    <div class="split-container" :class="{ 'split-active': showBookViewer }">
+      <!-- 左侧地图区域 -->
+      <div class="map-section" :class="{ 'map-shrink': showBookViewer }">
+        <div id="map" ref="mapContainer">
+          <!-- 测量工具栏 -->
+          <div class="measure-toolbar">
+            <button 
+              class="measure-btn"
+              @click="toggleMeasurement('distance')"
+              :class="{ active: currentTool === 'distance' }"
+            >
+              <span class="icon">📏</span>
+              <span>测距</span>
+            </button>
+            <button 
+              class="measure-btn"
+              @click="toggleMeasurement('area')"
+              :class="{ active: currentTool === 'area' }"
+            >
+              <span class="icon">⬡</span>
+              <span>测面</span>
+            </button>
+            <button 
+              class="measure-btn"
+              @click="clearMeasurements"
+            >
+              <span class="icon">🗑️</span>
+              <span>清除</span>
+            </button>
+          </div>
+
+          <!-- 重置视图图标 -->
+          <div class="reset-view-icon" @click="resetView" title="重置视图">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g class="globe-paths">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 3C12 3 8 7 8 12C8 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 3C12 3 16 7 16 12C16 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
+
+          <!-- 图层控制面板 -->
+          <div id="controls">
+            <h3>专题底图数据</h3>
+            <!-- 添加清除按钮 -->
+            <div class="clear-button-container">
+              <button class="clear-button" @click="clearAllLayers" :disabled="!activeLayers.length">
+                <span class="clear-icon">🗑️</span>
+                <span>清除所有图层</span>
+              </button>
+            </div>
+            <!-- 底图选择下拉框 -->
+            <div class="basemap-selector">
+              <div class="selector-header" @click="toggleBasemapList">
+                <span>底图选择</span>
+                <span class="arrow">{{ showBasemapList ? '▼' : '▶' }}</span>
+              </div>
+              <div class="basemap-list" v-show="showBasemapList">
+                <div 
+                  v-for="map in basemaps" 
+                  :key="map.id"
+                  class="basemap-item"
+                  :class="{ active: currentBasemap === map.id }"
+                  @click="changeBasemap(map.id)"
+                >
+                  {{ map.name }}
+                </div>
+              </div>
+            </div>
+            <!-- 专题图层列表 -->
+            <ul>
+              <li v-for="(group, index) in layerGroups" :key="index">
+                <div @click="toggleGroup(index)" class="group-title">
+                  <strong>{{ group.title }}</strong>
+                  <span>{{ group.expanded ? "-" : "+" }}</span>
+                </div>
+                <ul v-show="group.expanded" class="layer-list">
+                  <li v-for="layer in group.layers" :key="layer.name">
+                    <input
+                      type="checkbox"
+                      :value="layer.name"
+                      v-model="activeLayers"
+                      @change="toggleLayer(layer)"
+                    />
+                    <label>{{ layer.name }}</label>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- 添加 AI 对话框 -->
+          <AIChatBox 
+            v-if="map"
+            :map="map"
+            @toggleLayers="handleToggleLayers"
+          />
+        </div>
+      </div>
+
+      <!-- 右侧书籍查看器 -->
+      <div class="book-viewer" :class="{ 'viewer-show': showBookViewer }">
+        <div class="viewer-header">
+          <h3>{{ currentBook.title || '板块信息' }}</h3>
+          <button class="close-viewer" @click="closeBookViewer">
+            <span class="close-icon">×</span>
+          </button>
+        </div>
+        <div class="viewer-content">
+          <iframe 
+            v-if="currentBook.url"
+            :src="currentBook.url"
+            frameborder="0"
+            class="book-iframe"
+          ></iframe>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { ref, onMounted, nextTick } from "vue";
+import { ref, onMounted, nextTick, computed } from "vue";
 import AIChatBox from './AIChatBox.vue';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import * as turf from '@turf/turf';
+import FileUpload from './FileUpload.vue';
+import FilePagination from './FilePagination.vue';
 
 // Mapbox 相关初始化
 mapboxgl.accessToken =
@@ -481,6 +533,70 @@ onMounted(() => {
     }
   });
 });
+
+// 添加分屏相关状态
+const showBookViewer = ref(false);
+const currentBook = ref({
+  title: '',
+  url: ''
+});
+
+// 在地图初始化时添加点击事件监听
+onMounted(async () => {
+  // ... 现有的初始化代码 ...
+
+  // 添加主板块图层点击事件
+  map.value.on('click', '主板块', (e) => {
+    if (e.features.length > 0) {
+      const feature = e.features[0];
+      currentBook.value = {
+        title: feature.properties.name || '板块信息',
+        url: 'https://example.com/book' // 替换为实际URL
+      };
+      showBookViewer.value = true;
+      
+      // 触发地图重新渲染以适应新的容器大小
+      setTimeout(() => {
+        map.value.resize();
+      }, 300);
+    }
+  });
+});
+
+// 关闭书籍查看器
+const closeBookViewer = () => {
+  showBookViewer.value = false;
+  setTimeout(() => {
+    map.value.resize();
+  }, 300);
+};
+
+// 添加状态控制
+const showFileUpload = ref(false);
+const showFilePagination = ref(false);
+const showMap = ref(true);
+
+// 计算是否显示任何组件
+const showAnyComponent = computed(() => 
+  showFileUpload.value || showFilePagination.value
+);
+
+// 切换文件上传组件
+const toggleFileUpload = () => {
+  showFileUpload.value = !showFileUpload.value;
+  showFilePagination.value = false;
+};
+
+// 切换文件分页展示组件
+const toggleFilePagination = () => {
+  showFilePagination.value = !showFilePagination.value;
+  showFileUpload.value = false;
+};
+
+// 切换地图显示
+const toggleMap = () => {
+  showMap.value = !showMap.value;
+};
 </script>
 
 <style scoped>
@@ -493,7 +609,7 @@ onMounted(() => {
 #controls {
   position: absolute;
   top: 50%;
-  left: 20px;
+  right: 20px;
   transform: translateY(-50%);
   z-index: 10;
   background: rgba(250, 251, 252, 0.95);
@@ -502,23 +618,9 @@ onMounted(() => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   max-height: 80vh;
   overflow-y: auto;
-  min-width: 280px;
-  
-  /* 自定义滚动条样式 */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: #f5f6f7;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: #d0d7de;
-    &:hover {
-      background: #bbc0c4;
-    }
-  }
+  min-width: 300px;
+  max-width: 400px;
+  transition: all 0.3s ease;
 }
 
 #controls h3 {
@@ -896,5 +998,218 @@ onMounted(() => {
 /* 隐藏弹窗尖角 */
 .measurement-result .mapboxgl-popup-tip {
   display: none;
+}
+
+/* 分屏布局样式 */
+.split-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 左侧地图区域样式 */
+.map-section {
+  position: relative;
+  flex: 1;
+  transition: all 0.3s ease;
+  transform-origin: left top;
+}
+
+/* 分屏时的缩放效果 */
+.map-section.map-shrink {
+  flex: 0 0 60%;
+  transform: scale(0.8);
+  
+  /* 调整控件位置和缩放 */
+  #controls {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%) scale(0.9);
+    transform-origin: right center;
+  }
+  
+  /* 增大测量工具栏的缩放比例 */
+  .measure-toolbar {
+    transform: scale(1.1);  /* 从 0.9 改为 1.1 */
+    transform-origin: left top;
+    left: 70px;
+  }
+  
+  .reset-view-icon {
+    transform: scale(0.9);
+    transform-origin: left top;
+    left: 20px;
+  }
+  
+  .ai-chat-box {
+    transform: scale(0.9);
+    transform-origin: right bottom;
+    right: 20px;
+  }
+
+  /* 补偿地图容器尺寸 */
+  #map {
+    width: 125%;
+    height: 125%;
+    transform-origin: left top;
+  }
+}
+
+/* 右侧书籍查看器样式 */
+.book-viewer {
+  position: absolute;
+  right: -40%;
+  top: 0;
+  width: 40%;
+  height: 100%;
+  background: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.book-viewer.viewer-show {
+  right: 0;
+}
+
+.viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.close-viewer {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.close-viewer:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.viewer-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.book-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .map-section.map-shrink {
+    display: none;
+  }
+  
+  .book-viewer {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .book-viewer.viewer-show {
+    right: 0;
+    width: 100%;
+  }
+}
+
+/* 添加左上角功能控制组件样式 */
+.top-controls {
+  position: absolute;
+  top: 120px;  /* 保持向下偏移 */
+  left: 70px;  /* 与测量工具栏左对齐 */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 284px;  /* 设置固定宽度，与测量工具栏宽度一致 */
+}
+
+.control-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;  /* 改为两端对齐 */
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;  /* 占满容器宽度 */
+}
+
+.control-btn {
+  flex: 1;  /* 平均分配空间 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 64px;
+  height: 40px;
+}
+
+.control-btn:hover {
+  background: #ecf5ff;
+  border-color: #409eff;
+  transform: translateY(-2px);
+}
+
+.btn-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.btn-text {
+  font-size: 12px;
+  color: #606266;
+}
+
+.panel-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  max-width: 320px;
+}
+
+/* 调整专题底图数据面板的基础尺寸 */
+#controls {
+  min-width: 300px;
+  max-width: 400px;
+  padding: 20px;
+}
+
+/* 调整测量工具栏按钮的大小 */
+.measure-btn {
+  padding: 8px 16px;
+  height: 40px;       /* 增加高度 */
+  font-size: 15px;    /* 增加字体大小 */
+  min-width: 90px;    /* 添加最小宽度 */
+  
+  .icon {
+    font-size: 18px;  /* 增加图标大小 */
+  }
 }
 </style>

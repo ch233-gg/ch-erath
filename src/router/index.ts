@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomePage from '@/views/HomePage.vue';
+import MapVisualization from '@/components/MapVisualization.vue';
 import FileDetails from '@/components/FileDetails.vue';
 import FileEdit from '@/components/FileEdit.vue';
 import FilePagination from '@/components/FilePagination.vue';
@@ -7,8 +7,8 @@ import FilePagination from '@/components/FilePagination.vue';
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: HomePage,
+    name: 'home',
+    component: MapVisualization,
   },
   {
     path: '/files/details/:id',
@@ -29,7 +29,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 
