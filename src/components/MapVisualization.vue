@@ -1,5 +1,32 @@
 <template>
   <div id="map" ref="mapContainer">
+    <!-- 测量工具栏 -->
+    <div class="measure-toolbar">
+      <button 
+        class="measure-btn"
+        @click="toggleMeasurement('distance')"
+        :class="{ active: currentTool === 'distance' }"
+      >
+        <span class="icon">📏</span>
+        <span>测距</span>
+      </button>
+      <button 
+        class="measure-btn"
+        @click="toggleMeasurement('area')"
+        :class="{ active: currentTool === 'area' }"
+      >
+        <span class="icon">⬡</span>
+        <span>测面</span>
+      </button>
+      <button 
+        class="measure-btn"
+        @click="clearMeasurements"
+      >
+        <span class="icon">🗑️</span>
+        <span>清除</span>
+      </button>
+    </div>
+
     <!-- 重置视图图标 -->
     <div class="reset-view-icon" @click="resetView" title="重置视图">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -64,6 +91,7 @@
     
     <!-- 添加 AI 对话框 -->
     <AIChatBox 
+      v-if="map"
       :map="map"
       @toggleLayers="handleToggleLayers"
     />
@@ -75,12 +103,18 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { ref, onMounted, nextTick } from "vue";
 import AIChatBox from './AIChatBox.vue';
+import MapboxDraw from '@mapbox/mapbox-gl-draw';
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
+import * as turf from '@turf/turf';
 
 // Mapbox 相关初始化
 mapboxgl.accessToken =
   "pk.eyJ1IjoiY3VkODUiLCJhIjoiY2xrYnFncXZhMGc1cTNlbmFrNHN1N2cxeCJ9.69E3f8nMJkvqQDRhLSojVw";
 
+const mapContainer = ref(null);
 const map = ref(null);
+const draw = ref(null);
+const currentTool = ref(null);
 const activeLayers = ref([]); // 当前激活的图层数组
 
 // 图层分组配置
@@ -193,18 +227,6 @@ const changeBasemap = (mapId) => {
     currentBasemap.value = mapId;
   }
   showBasemapList.value = false;
-};
-
-// 初始化 Mapbox 地图
-const initializeMap = () => {
-  if (map.value) return;
-
-  map.value = new mapboxgl.Map({
-    container: "map",
-    style: "mapbox://styles/mapbox/streets-v12",
-    center: [118.7915619, 32.0615513],
-    zoom: 3,
-  });
 };
 
 // 切换分组展开/折叠
@@ -326,10 +348,137 @@ const resetView = () => {
   });
 };
 
-// 初始化地图并加载底图
+// 初始化地图
+onMounted(async () => {
+  if (mapContainer.value) {
+    try {
+      // 创建地图实例
+      map.value = new mapboxgl.Map({
+        container: mapContainer.value,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [118.7915619, 32.0615513],
+        zoom: 3,
+        preserveDrawingBuffer: true
+      });
+
+      // 等待地图加载完成
+      await new Promise((resolve) => {
+        map.value.on('load', () => {
+          console.log('Map loaded successfully');
+          resolve();
+        });
+      });
+
+      // 初始化绘图工具
+      draw.value = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+          line_string: true,
+          polygon: true,
+          trash: true
+        }
+      });
+
+      // 添加绘图控件
+      map.value.addControl(draw.value);
+
+      // 添加事件监听
+      map.value.on('draw.create', updateMeasurement);
+      map.value.on('draw.update', updateMeasurement);
+      map.value.on('draw.delete', clearMeasurements);
+
+    } catch (error) {
+      console.error('Map initialization error:', error);
+    }
+  }
+});
+
+// 测量相关方法
+const toggleMeasurement = (type) => {
+  if (currentTool.value === type) {
+    currentTool.value = null;
+    draw.value?.deleteAll();
+    draw.value?.changeMode('simple_select');
+  } else {
+    currentTool.value = type;
+    draw.value?.deleteAll();
+    if (type === 'area') {
+      draw.value?.changeMode('draw_polygon');
+    } else if (type === 'distance') {
+      draw.value?.changeMode('draw_line_string');
+    }
+  }
+};
+
+// 更新测量结果显示方法
+const updateMeasurement = (e) => {
+  if (!e.features.length) return;
+  
+  const data = e.features[0];
+  if (data.geometry.type === 'Polygon' && currentTool.value === 'area') {
+    const area = turf.area(data);
+    const areaKm = (area / 1000000).toFixed(2);
+    
+    // 创建一个固定的弹窗
+    const popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      className: 'measurement-result'
+    })
+      .setLngLat(data.geometry.coordinates[0][0])
+      .setHTML(`<div class="measurement-value">面积: ${areaKm} 平方公里</div>`)
+      .addTo(map.value);
+
+  } else if (data.geometry.type === 'LineString' && currentTool.value === 'distance') {
+    const length = turf.length(data, { units: 'kilometers' }).toFixed(2);
+    const coordinates = data.geometry.coordinates;
+    
+    // 创建一个固定的弹窗
+    const popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      className: 'measurement-result'
+    })
+      .setLngLat(coordinates[coordinates.length - 1])
+      .setHTML(`<div class="measurement-value">距离: ${length} 公里</div>`)
+      .addTo(map.value);
+  }
+};
+
+// 修改清除测量方法
+const clearMeasurements = () => {
+  draw.value?.deleteAll();
+  currentTool.value = null;
+  
+  // 移除所有测量结果弹窗
+  const popups = document.getElementsByClassName('mapboxgl-popup');
+  while(popups[0]) {
+    popups[0].remove();
+  }
+};
+
+// 添加地图移动事件监听，更新测量结果位置
 onMounted(() => {
-  nextTick(() => {
-    initializeMap();
+  // ... 现有的初始化代码 ...
+
+  // 添加地图移动事件监听
+  map.value.on('move', () => {
+    const measurementDiv = document.getElementById('measurement-result');
+    if (measurementDiv && draw.value.getAll().features.length > 0) {
+      const feature = draw.value.getAll().features[0];
+      if (feature.geometry.type === 'Polygon') {
+        const center = turf.center(feature);
+        const point = map.value.project(center.geometry.coordinates);
+        measurementDiv.style.left = `${point.x + 10}px`;
+        measurementDiv.style.top = `${point.y - 30}px`;
+      } else if (feature.geometry.type === 'LineString') {
+        const coordinates = feature.geometry.coordinates;
+        const endPoint = coordinates[coordinates.length - 1];
+        const point = map.value.project(endPoint);
+        measurementDiv.style.left = `${point.x + 10}px`;
+        measurementDiv.style.top = `${point.y - 30}px`;
+      }
+    }
   });
 });
 </script>
@@ -630,5 +779,122 @@ onMounted(() => {
   .reset-view-btn:hover .btn-text {
     color: #93c5fd;
   }
+}
+
+/* 修改测量工具栏位置 */
+.measure-toolbar {
+  position: absolute;
+  top: 20px;
+  left: 70px;  /* 修改左边距，为重置视图按钮留出空间 */
+  display: flex;
+  gap: 8px;
+  z-index: 1;
+}
+
+/* 优化测量按钮样式，使其与重置视图按钮更协调 */
+.measure-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;  /* 稍微调整padding */
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;  /* 稍微调小字号 */
+  color: #374151;
+  transition: all 0.2s;
+  height: 32px;  /* 设置固定高度，与重置视图按钮对齐 */
+}
+
+.measure-btn:hover {
+  background: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.measure-btn.active {
+  background: #ede9fe;
+  border-color: #6366f1;
+  color: #4f46e5;
+}
+
+/* 测量结果弹窗样式 */
+.mapboxgl-popup {
+  z-index: 2;
+}
+
+.mapboxgl-popup-content {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 确保地图容器有正确的尺寸 */
+#map {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+}
+
+/* 确保地图控件在正确的层级 */
+.mapboxgl-control-container {
+  z-index: 1;
+}
+
+.measurement-result-box {
+  position: absolute;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 1000;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+/* 添加一个小箭头 */
+.measurement-result-box::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-style: solid;
+  border-width: 6px 6px 6px 0;
+  border-color: transparent white transparent transparent;
+}
+
+/* 测量结果样式 */
+.measurement-result {
+  z-index: 1000;
+}
+
+.measurement-result .mapboxgl-popup-content {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+}
+
+.measurement-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+/* 隐藏弹窗尖角 */
+.measurement-result .mapboxgl-popup-tip {
+  display: none;
 }
 </style>
