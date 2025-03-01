@@ -1,15 +1,17 @@
 <template>
   <div class="file-management">
     <el-input v-model="property" placeholder="请输入章节属性" style="margin-bottom: 10px;" @keyup.enter="fetchFiles" />
-    <el-table :data="files" border style="margin-top: 10px;">
-      <el-table-column prop="property" label="章节" width="150"></el-table-column>
-      <el-table-column prop="file_type" label="文件类型" width="120"></el-table-column>
-      <el-table-column prop="file_path" label="文件路径"></el-table-column>
-      <el-table-column label="操作" width="250">
+    <el-table :data="files" border style="margin-top: 10px; width: 100%;" size="small">
+      <el-table-column prop="property" label="章节" min-width="80"></el-table-column>
+      <el-table-column prop="file_type" label="文件类型" min-width="80"></el-table-column>
+      <el-table-column prop="file_path" label="文件路径" min-width="120" show-overflow-tooltip></el-table-column>
+      <el-table-column label="操作" width="180">
         <template #default="scope">
-          <el-button size="mini" @click="showDetails(scope.row.id)">详情</el-button>
-          <el-button size="mini" type="primary" @click="editFile(scope.row)">编辑</el-button>
-          <el-button size="mini" type="danger" @click="deleteFile(scope.row.id)">删除</el-button>
+          <div class="action-buttons">
+            <el-button size="small" @click="showDetails(scope.row.id)">详情</el-button>
+            <el-button size="small" type="primary" @click="editFile(scope.row)">编辑</el-button>
+            <el-button size="small" type="danger" @click="deleteFile(scope.row.id)">删除</el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -103,7 +105,23 @@ const editFile = (file: any) => {
 
 <style scoped>
 .file-management {
-  padding: 20px;
-  padding-top: 40px;
+  width: 100%;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* 确保表格内容不会溢出 */
+:deep(.el-table) {
+  width: 100% !important;
+  table-layout: fixed;
+}
+
+:deep(.el-button--small) {
+  padding: 5px 10px;
+  font-size: 12px;
 }
 </style>

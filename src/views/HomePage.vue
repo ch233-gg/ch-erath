@@ -74,7 +74,7 @@ const toggleMap = () => {
   position: absolute;
   top: 20px;
   right: 20px;
-  width: 320px;
+  width: 420px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
@@ -144,12 +144,13 @@ const toggleMap = () => {
 
 .panel-content {
   margin-top: 16px;
-  padding: 16px;
+  padding: 12px;
   background: #fff;
   border-radius: 6px;
   border: 1px solid #e4e7ed;
-  max-height: calc(100vh - 240px);
+  max-height: calc(100vh - 180px);
   overflow-y: auto;
+  width: 100%;
 }
 
 /* 自定义滚动条样式 */

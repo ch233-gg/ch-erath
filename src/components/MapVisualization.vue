@@ -29,43 +29,61 @@
       <!-- 左侧地图区域 -->
       <div class="map-section" :class="{ 'map-shrink': showBookViewer }">
         <div id="map" ref="mapContainer">
-          <!-- 测量工具栏 -->
-          <div class="measure-toolbar">
-            <button 
-              class="measure-btn"
-              @click="toggleMeasurement('distance')"
+          <!-- 测量工具栏 - 修改为独立按钮 -->
+          <div class="map-controls-group">
+            <!-- 重置视图图标 -->
+            <div class="reset-view-icon" @click="resetView" title="重置视图">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g class="globe-paths">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 3C12 3 8 7 8 12C8 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M12 3C12 3 16 7 16 12C16 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </g>
+              </svg>
+            </div>
+            
+            <!-- 测距按钮 -->
+            <div 
+              class="map-control-icon" 
               :class="{ active: currentTool === 'distance' }"
+              @click="toggleMeasurement('distance')" 
+              title="测距"
             >
-              <span class="icon">📏</span>
-              <span>测距</span>
-            </button>
-            <button 
-              class="measure-btn"
-              @click="toggleMeasurement('area')"
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M5 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M19 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 7V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            
+            <!-- 测面按钮 -->
+            <div 
+              class="map-control-icon" 
               :class="{ active: currentTool === 'area' }"
+              @click="toggleMeasurement('area')" 
+              title="测面"
             >
-              <span class="icon">⬡</span>
-              <span>测面</span>
-            </button>
-            <button 
-              class="measure-btn"
-              @click="clearMeasurements"
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6L12 3L21 6V18L12 21L3 18V6Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M12 3V21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M3 6L21 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M21 6L3 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            
+            <!-- 清除测量按钮 -->
+            <div 
+              class="map-control-icon" 
+              @click="clearMeasurements" 
+              title="清除测量"
             >
-              <span class="icon">🗑️</span>
-              <span>清除</span>
-            </button>
-          </div>
-
-          <!-- 重置视图图标 -->
-          <div class="reset-view-icon" @click="resetView" title="重置视图">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <g class="globe-paths">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-                <path d="M12 3C12 3 8 7 8 12C8 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M12 3C12 3 16 7 16 12C16 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </g>
-            </svg>
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
           </div>
 
           <!-- 图层控制面板 -->
@@ -144,21 +162,32 @@
               :class="{ active: activeTab === 'info' }"
               @click="activeTab = 'info'"
             >
-              书籍信息
+              <span class="tab-icon">📖</span>
+              <span>书籍信息</span>
             </button>
             <button 
               class="tab-btn" 
               :class="{ active: activeTab === 'text' }"
               @click="activeTab = 'text'"
             >
-              文字内容
+              <span class="tab-icon">📝</span>
+              <span>文字内容</span>
             </button>
             <button 
               class="tab-btn" 
               :class="{ active: activeTab === 'image' }"
               @click="activeTab = 'image'"
             >
-              图片展示
+              <span class="tab-icon">🖼️</span>
+              <span>图片展示</span>
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'table' }"
+              @click="activeTab = 'table'"
+            >
+              <span class="tab-icon">📊</span>
+              <span>表格展示</span>
             </button>
           </div>
           
@@ -182,6 +211,27 @@
               frameborder="0"
               class="content-iframe"
             ></iframe>
+            <div v-if="activeTab === 'table'" class="table-display">
+              <!-- 表格展示区域，后续会链接到后端 -->
+              <div class="table-header">
+                <h4>数据表格展示</h4>
+                <div class="table-actions">
+                  <button class="action-btn refresh-btn">
+                    <span>🔄</span>
+                  </button>
+                  <button class="action-btn export-btn">
+                    <span>📥</span>
+                  </button>
+                </div>
+              </div>
+              <div class="table-content">
+                <div class="table-placeholder">
+                  <div class="placeholder-icon">📊</div>
+                  <p>表格数据加载区域</p>
+                  <p class="note">此区域将链接到后端数据</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -656,8 +706,8 @@ const activeTab = ref('info');  // 默认显示书籍信息
   right: 20px;
   transform: translateY(-50%);
   z-index: 10;
-  background: rgba(250, 251, 252, 0.95);
-  padding: 18px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   max-height: 80vh;
@@ -665,15 +715,17 @@ const activeTab = ref('info');  // 默认显示书籍信息
   min-width: 300px;
   max-width: 400px;
   transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+  backdrop-filter: blur(10px);
 }
 
 #controls h3 {
   margin: 0 0 15px 0;
-  color: #2f363d;
-  font-size: 15px;
+  color: #333;
+  font-size: 16px;
   font-weight: 600;
-  border-bottom: 2px solid #eaecef;
-  padding-bottom: 8px;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
   text-align: center;
   position: relative;
 }
@@ -684,19 +736,9 @@ const activeTab = ref('info');  // 默认显示书籍信息
   bottom: -2px;
   left: 50%;
   transform: translateX(-50%);
-  width: 100px;
+  width: 80px;
   height: 2px;
-  background: #409eff;
-}
-
-#controls ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-#controls li {
-  margin-bottom: 8px;
+  background: #3b82f6;
 }
 
 #controls .group-title {
@@ -704,25 +746,26 @@ const activeTab = ref('info');  // 默认显示书籍信息
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  padding: 8px 12px;
-  background: #f6f8fa;
-  border: 1px solid #eaecef;
-  border-radius: 6px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
   transition: all 0.2s ease;
-  
-  &:hover {
-    background: #f1f3f5;
-    border-color: #e1e4e8;
-  }
+  margin-bottom: 8px;
+}
+
+#controls .group-title:hover {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
 }
 
 #controls .group-title strong {
   font-size: 14px;
-  color: #444d56;
+  color: #4b5563;
 }
 
 #controls .group-title span {
-  color: #6a737d;
+  color: #9ca3af;
   font-size: 16px;
   font-weight: bold;
 }
@@ -730,20 +773,21 @@ const activeTab = ref('info');  // 默认显示书籍信息
 #controls .layer-list {
   padding: 8px 12px 8px 24px;
   background: #ffffff;
+  border-radius: 8px;
+  margin: 4px 0 12px;
+  border: 1px solid #f0f0f0;
+}
+
+#controls .layer-list li {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  transition: background-color 0.2s ease;
   border-radius: 4px;
-  margin: 4px 0;
-  
-  li {
-    display: flex;
-    align-items: center;
-    padding: 4px 0;
-    transition: background-color 0.2s ease;
-    border-radius: 4px;
-    
-    &:hover {
-      background: #f6f8fa;
-    }
-  }
+}
+
+#controls .layer-list li:hover {
+  background: #f9fafb;
 }
 
 #controls input[type="checkbox"] {
@@ -751,20 +795,20 @@ const activeTab = ref('info');  // 默认显示书籍信息
   cursor: pointer;
   width: 16px;
   height: 16px;
-  accent-color: #6c8eef;
+  accent-color: #3b82f6;
 }
 
 #controls label {
   cursor: pointer;
   font-size: 13px;
-  color: #4a5568;
-  
-  &:hover {
-    color: #2d3748;
-  }
+  color: #4b5563;
 }
 
-/* 添加清除按钮容器样式 */
+#controls label:hover {
+  color: #1f2937;
+}
+
+/* 清除按钮容器样式 */
 .clear-button-container {
   margin-bottom: 16px;
   padding: 0 4px;
@@ -775,14 +819,15 @@ const activeTab = ref('info');  // 默认显示书籍信息
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
-  background: #f5f6f7;
-  border: 1px solid #e1e4e8;
-  border-radius: 6px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #666;
-  font-size: 13px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .clear-button:hover:not(:disabled) {
@@ -797,15 +842,15 @@ const activeTab = ref('info');  // 默认显示书籍信息
 }
 
 .clear-icon {
-  margin-right: 6px;
+  margin-right: 8px;
   font-size: 16px;
 }
 
-/* 添加底图选择器样式 */
+/* 底图选择器样式 */
 .basemap-selector {
   margin-bottom: 16px;
-  border: 1px solid #e4e7ed;
-  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -813,38 +858,48 @@ const activeTab = ref('info');  // 默认显示书籍信息
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  background: #f6f8fa;
+  padding: 12px 16px;
+  background: #f9fafb;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-weight: 500;
+  color: #4b5563;
 }
 
 .selector-header:hover {
-  background: #ecf5ff;
+  background: #f3f4f6;
+  color: #3b82f6;
 }
 
 .arrow {
   font-size: 12px;
-  color: #909399;
+  color: #9ca3af;
 }
 
 .basemap-list {
   background: #fff;
+  border-top: 1px solid #f0f0f0;
 }
 
 .basemap-item {
-  padding: 8px 12px;
+  padding: 10px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.basemap-item:last-child {
+  border-bottom: none;
 }
 
 .basemap-item:hover {
-  background: #f5f7fa;
+  background: #f3f4f6;
 }
 
 .basemap-item.active {
-  background: #ecf5ff;
-  color: #409eff;
+  background: #eff6ff;
+  color: #3b82f6;
+  font-weight: 500;
 }
 
 /* 重置视图按钮样式 */
@@ -852,28 +907,36 @@ const activeTab = ref('info');  // 默认显示书籍信息
   position: absolute;
   top: 20px;
   left: 20px;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
   z-index: 1000;
   opacity: 0.9;
   transition: all 0.3s ease;
-  color: #3B82F6;
+  color: #3b82f6;
   filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
 }
 
 .reset-view-icon svg {
-  width: 100%;
-  height: 100%;
+  width: 24px;
+  height: 24px;
 }
 
 .reset-view-icon:hover {
-  transform: scale(1.1) rotate(180deg);
+  transform: scale(1.05);
   filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4));
+  background: #f0f7ff;
 }
 
 .reset-view-icon:active {
-  transform: scale(0.95) rotate(180deg);
+  transform: scale(0.95);
 }
 
 /* 添加笔画动画效果 */
@@ -891,145 +954,73 @@ const activeTab = ref('info');  // 默认显示书籍信息
   }
 }
 
-/* 添加毛玻璃效果 */
-@supports (backdrop-filter: blur(4px)) {
-  .reset-view-btn {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(4px);
-  }
-}
-
-/* 适配深色模式 */
-@media (prefers-color-scheme: dark) {
-  .reset-view-btn {
-    background: rgba(31, 41, 55, 0.9);
-  }
-  
-  .btn-text {
-    color: #e5e7eb;
-  }
-  
-  .reset-icon {
-    color: #60a5fa;
-  }
-  
-  .btn-backdrop {
-    background: linear-gradient(
-      135deg,
-      rgba(96, 165, 250, 0.1),
-      rgba(59, 130, 246, 0.1)
-    );
-  }
-  
-  .reset-view-btn:hover .reset-icon,
-  .reset-view-btn:hover .btn-text {
-    color: #93c5fd;
-  }
-}
-
 /* 修改测量工具栏位置 */
 .measure-toolbar {
+  display: none; /* 隐藏旧的工具栏 */
+}
+
+/* 添加地图控制按钮组样式 */
+.map-controls-group {
   position: absolute;
   top: 20px;
-  left: 70px;  /* 修改左边距，为重置视图按钮留出空间 */
+  left: 20px;
   display: flex;
-  gap: 8px;
-  z-index: 1;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
 }
 
-/* 优化测量按钮样式，使其与重置视图按钮更协调 */
-.measure-btn {
+/* 通用地图控制图标样式 */
+.map-control-icon {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  z-index: 1000;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  color: #3b82f6;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
+  background: white;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;  /* 稍微调整padding */
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;  /* 稍微调小字号 */
-  color: #374151;
-  transition: all 0.2s;
-  height: 32px;  /* 设置固定高度，与重置视图按钮对齐 */
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
 }
 
-.measure-btn:hover {
-  background: #f9fafb;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+.map-control-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
-.measure-btn.active {
-  background: #ede9fe;
-  border-color: #6366f1;
-  color: #4f46e5;
+.map-control-icon:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4));
+  background: #f0f7ff;
+}
+
+.map-control-icon:active {
+  transform: scale(0.95);
+}
+
+.map-control-icon.active {
+  background: #eff6ff;
+  color: #3b82f6;
+  border-color: #3b82f6;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
 }
 
 /* 测量结果弹窗样式 */
-.mapboxgl-popup {
-  z-index: 2;
-}
-
 .mapboxgl-popup-content {
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   color: #1f2937;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* 确保地图容器有正确的尺寸 */
-#map {
-  width: 100%;
-  height: 100vh;
-  position: relative;
-}
-
-/* 确保地图控件在正确的层级 */
-.mapboxgl-control-container {
-  z-index: 1;
-}
-
-.measurement-result-box {
-  position: absolute;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f0f0f0;
   background: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  pointer-events: none;
-  z-index: 1000;
-  transition: all 0.2s ease;
-  border: 1px solid #e5e7eb;
-  white-space: nowrap;
-}
-
-/* 添加一个小箭头 */
-.measurement-result-box::before {
-  content: '';
-  position: absolute;
-  left: -6px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-style: solid;
-  border-width: 6px 6px 6px 0;
-  border-color: transparent white transparent transparent;
-}
-
-/* 测量结果样式 */
-.measurement-result {
-  z-index: 1000;
-}
-
-.measurement-result .mapboxgl-popup-content {
-  background: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e5e7eb;
 }
 
 .measurement-value {
@@ -1042,6 +1033,74 @@ const activeTab = ref('info');  // 默认显示书籍信息
 /* 隐藏弹窗尖角 */
 .measurement-result .mapboxgl-popup-tip {
   display: none;
+}
+
+/* 重置视图按钮样式保持不变，但移动到控制组中 */
+.reset-view-icon {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  z-index: 1000;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  color: #3b82f6;
+  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f0f0f0;
+}
+
+/* 修改地图缩小时的控制组样式 */
+.map-section.map-shrink {
+  flex: 0 0 60%;
+  transform: scale(0.8);
+  
+  /* 调整控件位置和缩放 */
+  #controls {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%) scale(0.9);
+    transform-origin: right center;
+  }
+  
+  /* 调整控制组的缩放比例 */
+  .map-controls-group {
+    transform: scale(1.1);
+    transform-origin: left top;
+  }
+  
+  .ai-chat-box {
+    transform: scale(0.9);
+    transform-origin: right bottom;
+    right: 20px;
+  }
+
+  /* 补偿地图容器尺寸 */
+  #map {
+    width: 125%;
+    height: 125%;
+    transform-origin: left top;
+  }
+}
+
+/* 调整顶部控制组件的位置，避免与新的控制按钮重叠 */
+.top-controls {
+  position: absolute;
+  top: 20px;
+  left: 80px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 400px;
 }
 
 /* 分屏布局样式 */
@@ -1061,47 +1120,6 @@ const activeTab = ref('info');  // 默认显示书籍信息
   transform-origin: left top;
 }
 
-/* 分屏时的缩放效果 */
-.map-section.map-shrink {
-  flex: 0 0 60%;
-  transform: scale(0.8);
-  
-  /* 调整控件位置和缩放 */
-  #controls {
-    position: absolute;
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%) scale(0.9);
-    transform-origin: right center;
-  }
-  
-  /* 增大测量工具栏的缩放比例 */
-  .measure-toolbar {
-    transform: scale(1.1);  /* 从 0.9 改为 1.1 */
-    transform-origin: left top;
-    left: 70px;
-  }
-  
-  .reset-view-icon {
-    transform: scale(0.9);
-    transform-origin: left top;
-    left: 20px;
-  }
-  
-  .ai-chat-box {
-    transform: scale(0.9);
-    transform-origin: right bottom;
-    right: 20px;
-  }
-
-  /* 补偿地图容器尺寸 */
-  #map {
-    width: 125%;
-    height: 125%;
-    transform-origin: left top;
-  }
-}
-
 /* 右侧书籍查看器样式 */
 .book-viewer {
   position: absolute;
@@ -1109,12 +1127,13 @@ const activeTab = ref('info');  // 默认显示书籍信息
   top: 0;
   width: 40%;
   height: 100%;
-  background: white;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  background: #ffffff;
+  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
   display: flex;
   flex-direction: column;
+  border-left: 1px solid #f0f0f0;
 }
 
 .book-viewer.viewer-show {
@@ -1125,20 +1144,32 @@ const activeTab = ref('info');  // 默认显示书籍信息
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #ffffff;
+}
+
+.viewer-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
 }
 
 .close-viewer {
   background: none;
   border: none;
   font-size: 24px;
-  color: #6b7280;
+  color: #999;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
 }
 
 .close-viewer:hover {
@@ -1154,41 +1185,54 @@ const activeTab = ref('info');  // 默认显示书籍信息
 }
 
 .content-tabs {
-  padding: 16px 16px 0;
+  padding: 0;
   display: flex;
-  gap: 8px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #fff;
+  background: #f9fafb;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .tab-btn {
-  padding: 8px 16px;
-  border: 1px solid #e5e7eb;
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  background: #f9fafb;
-  color: #6b7280;
+  flex: 1;
+  padding: 14px 8px;
+  border: none;
+  background: transparent;
+  color: #666;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
-  
-  &:hover {
-    background: #f3f4f6;
-    color: #374151;
-  }
-  
-  &.active {
-    background: #fff;
-    color: #3b82f6;
-    border-color: #e5e7eb;
-    margin-bottom: -1px;
-    border-bottom: 1px solid #fff;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.tab-btn:hover {
+  background: #f3f4f6;
+  color: #3b82f6;
+}
+
+.tab-btn.active {
+  background: #ffffff;
+  color: #3b82f6;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #3b82f6;
+}
+
+.tab-icon {
+  font-size: 20px;
 }
 
 .content-display {
   flex: 1;
-  padding: 16px;
   overflow: hidden;
   background: #fff;
 }
@@ -1197,26 +1241,117 @@ const activeTab = ref('info');  // 默认显示书籍信息
   width: 100%;
   height: 100%;
   border: none;
-  border-radius: 8px;
   background: #fff;
 }
 
+/* 表格展示区域样式 */
+.table-display {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.table-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid #eaeaea;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.refresh-btn:hover {
+  color: #3b82f6;
+}
+
+.export-btn:hover {
+  color: #10b981;
+}
+
+.table-content {
+  flex: 1;
+  padding: 20px;
+  overflow: auto;
+}
+
+.table-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #d1d5db;
+}
+
+.table-placeholder p {
+  margin: 5px 0;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.table-placeholder .note {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
 /* 自定义滚动条 */
-.viewer-content::-webkit-scrollbar {
+.table-content::-webkit-scrollbar {
   width: 6px;
 }
 
-.viewer-content::-webkit-scrollbar-track {
+.table-content::-webkit-scrollbar-track {
   background: #f1f1f1;
-}
-
-.viewer-content::-webkit-scrollbar-thumb {
-  background: #c0c4cc;
   border-radius: 3px;
 }
 
-.viewer-content::-webkit-scrollbar-thumb:hover {
-  background: #909399;
+.table-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.table-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
 /* 响应式设计 */
@@ -1239,13 +1374,13 @@ const activeTab = ref('info');  // 默认显示书籍信息
 /* 添加左上角功能控制组件样式 */
 .top-controls {
   position: absolute;
-  top: 120px;  /* 保持向下偏移 */
-  left: 70px;  /* 与测量工具栏左对齐 */
+  top: 20px;
+  left: 80px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 284px;  /* 设置固定宽度，与测量工具栏宽度一致 */
+  width: 400px;
 }
 
 .control-buttons {
@@ -1297,7 +1432,38 @@ const activeTab = ref('info');  // 默认显示书籍信息
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   padding: 16px;
-  max-width: 320px;
+  max-width: 400px;
+  max-height: 600px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+/* 确保文件列表内容更紧凑 */
+:deep(.file-list-item) {
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+:deep(.file-pagination) {
+  margin-top: 12px;
+}
+
+/* 优化文件列表表格布局 */
+:deep(.file-table) {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+:deep(.file-table th),
+:deep(.file-table td) {
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+:deep(.file-table-container) {
+  overflow-x: auto;
+  margin-bottom: 10px;
 }
 
 /* 调整专题底图数据面板的基础尺寸 */
@@ -1317,5 +1483,45 @@ const activeTab = ref('info');  // 默认显示书籍信息
   .icon {
     font-size: 18px;  /* 增加图标大小 */
   }
+}
+
+.table-display {
+  width: 100%;
+  height: 100%;
+  padding: 15px;
+  overflow: auto;
+}
+
+.table-display h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.table-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 50px);
+  background: #f9f9f9;
+  border: 1px dashed #ddd;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.table-placeholder p {
+  margin: 5px 0;
+  font-size: 16px;
+  color: #666;
+}
+
+.table-placeholder .note {
+  font-size: 14px;
+  color: #999;
+  font-style: italic;
 }
 </style>

@@ -24,14 +24,23 @@
       </div>
 
       <div class="content-body">
-        <div v-show="currentTab === 'info'" class="tab-panel">
-          <!-- 信息面板内容 -->
+        <div v-show="currentTab === 'bookInfo'" class="tab-panel">
+          <!-- 书籍信息面板内容 -->
         </div>
-        <div v-show="currentTab === 'data'" class="tab-panel">
-          <!-- 数据面板内容 -->
+        <div v-show="currentTab === 'textContent'" class="tab-panel">
+          <!-- 文字内容面板内容 -->
         </div>
-        <div v-show="currentTab === 'docs'" class="tab-panel">
-          <!-- 文档面板内容 -->
+        <div v-show="currentTab === 'imageDisplay'" class="tab-panel">
+          <!-- 图片展示面板内容 -->
+        </div>
+        <div v-show="currentTab === 'tableDisplay'" class="tab-panel">
+          <!-- 表格展示面板内容 -->
+          <div class="table-view">
+            <h4>数据表格展示</h4>
+            <el-table :data="tableData" border style="width: 100%">
+              <el-table-column v-for="column in tableColumns" :key="column.prop" :prop="column.prop" :label="column.label" :width="column.width"></el-table-column>
+            </el-table>
+          </div>
         </div>
       </div>
     </div>
@@ -39,7 +48,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
   isVisible: Boolean,
@@ -48,12 +57,32 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
-const currentTab = ref('info');
+const currentTab = ref('bookInfo');
+
+// 表格数据
+const tableData = ref([]);
+const tableColumns = ref([
+  { prop: 'name', label: '名称', width: '120' },
+  { prop: 'type', label: '类型', width: '100' },
+  { prop: 'value', label: '数值', width: '120' },
+  { prop: 'description', label: '描述' }
+]);
+
+// 监听选中图层变化，更新表格数据
+watch(() => props.selectedLayer, (newLayer) => {
+  if (newLayer && newLayer.data) {
+    // 这里根据实际数据结构处理表格数据
+    tableData.value = Array.isArray(newLayer.data) ? newLayer.data : [];
+  } else {
+    tableData.value = [];
+  }
+}, { immediate: true });
 
 const tabs = [
-  { id: 'info', label: '基本信息' },
-  { id: 'data', label: '数据预览' },
-  { id: 'docs', label: '相关文档' }
+  { id: 'bookInfo', label: '书籍信息' },
+  { id: 'textContent', label: '文字内容' },
+  { id: 'imageDisplay', label: '图片展示' },
+  { id: 'tableDisplay', label: '表格展示' }
 ];
 
 const mapStyle = computed(() => ({
@@ -133,5 +162,16 @@ const close = () => {
 
 .close-btn:hover {
   background: #f3f4f6;
+}
+
+.table-view {
+  width: 100%;
+}
+
+.table-view h4 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #333;
 }
 </style> 
