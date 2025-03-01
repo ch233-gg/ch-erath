@@ -1067,8 +1067,44 @@ const activeTab = ref('info');  // 默认显示书籍信息
     position: absolute;
     top: 50%;
     right: 20px;
-    transform: translateY(-50%) scale(0.9);
+    transform: translateY(-50%) scale(1);  /* 从0.9改为1，避免缩小文字 */
     transform-origin: right center;
+    font-size: 115%;  /* 进一步增加字体大小 */
+    background: rgba(255, 255, 255, 1);  /* 完全不透明背景 */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);  /* 增强阴影效果 */
+    
+    /* 提高文字渲染质量 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    
+    /* 避免缩放导致的模糊 */
+    backface-visibility: hidden;
+    perspective: 1000px;
+    
+    /* 增强边框对比度 */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  #controls h3 {
+    font-size: 18px;  /* 进一步增加标题字体大小 */
+    font-weight: 700;  /* 加粗标题 */
+    color: #111;  /* 更深的标题颜色 */
+    letter-spacing: 0.3px;  /* 增加字母间距 */
+    text-shadow: 0 0 1px rgba(0,0,0,0.05);  /* 轻微文字阴影增强清晰度 */
+  }
+  
+  #controls .group-title strong {
+    font-size: 16px;  /* 进一步增加分组标题字体大小 */
+    color: #222;  /* 更深的分组标题颜色 */
+    font-weight: 600;  /* 加粗分组标题 */
+    letter-spacing: 0.2px;  /* 增加字母间距 */
+  }
+  
+  #controls label {
+    font-size: 15px;  /* 进一步增加标签字体大小 */
+    color: #222;  /* 更深的标签颜色 */
+    font-weight: 500;  /* 稍微加粗标签 */
   }
   
   /* 调整控制组的缩放比例 */
@@ -1089,6 +1125,64 @@ const activeTab = ref('info');  // 默认显示书籍信息
     height: 125%;
     transform-origin: left top;
   }
+  
+  /* 优化图层列表文字渲染 */
+  .layer-list {
+    background: #ffffff;  /* 纯白背景 */
+    border: 1px solid rgba(0, 0, 0, 0.1);  /* 增强边框对比度 */
+    
+    li {
+      padding: 10px 0;  /* 增加行高 */
+      margin: 2px 0;  /* 增加行间距 */
+    }
+    
+    label {
+      font-size: 15px !important;  /* 强制增加字体大小 */
+      letter-spacing: 0.3px;  /* 增加字母间距 */
+      text-shadow: 0 0 0.2px rgba(0,0,0,0.1);  /* 轻微文字阴影增强清晰度 */
+      display: inline-block;  /* 确保文本渲染正确 */
+      transform: translateZ(0);  /* 启用GPU加速 */
+    }
+  }
+  
+  /* 优化底图选择器文字 */
+  .basemap-selector {
+    border: 1px solid rgba(0, 0, 0, 0.1);  /* 增强边框对比度 */
+  }
+  
+  .selector-header {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  
+  .basemap-item {
+    font-size: 15px;
+    padding: 12px 16px;  /* 增加内边距 */
+    letter-spacing: 0.2px;
+    font-weight: 500;
+  }
+  
+  /* 优化清除按钮文字 */
+  .clear-button {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  
+  /* 优化复选框和标签的对齐 */
+  #controls input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+}
+
+/* 全局优化文字渲染 */
+#controls {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* 调整顶部控制组件的位置，避免与新的控制按钮重叠 */
