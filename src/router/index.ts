@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import MapVisualization from '@/components/MapVisualization.vue';
 import FileDetails from '@/components/FileDetails.vue';
 import FileEdit from '@/components/FileEdit.vue';
 import FilePagination from '@/components/FilePagination.vue';
+import HomePage from '@/views/HomePage.vue';
 
 const routes = [
   {
     path: '/',
     name: 'home',
-    component: MapVisualization,
+    component: HomePage,
   },
   {
     path: '/files/details/:id',

@@ -1,141 +1,10 @@
 <template>
   <div class="map-container">
-    <!-- 左上角功能控制组件 -->
-    <div class="top-controls">
-      <div class="control-buttons">
-        <div class="control-btn" @click="toggleFileUpload">
-          <span class="btn-icon">📤</span>
-          <span class="btn-text">文件上传</span>
-        </div>
-        <div class="control-btn" @click="toggleFilePagination">
-          <span class="btn-icon">📋</span>
-          <span class="btn-text">文件列表</span>
-        </div>
-        <div class="control-btn" @click="toggleMap">
-          <span class="btn-icon">🗺️</span>
-          <span class="btn-text">地图显示</span>
-        </div>
-      </div>
-      
-      <!-- 显示的组件 -->
-      <div class="panel-content" v-if="showAnyComponent">
-        <FileUpload v-if="showFileUpload" />
-        <FilePagination v-if="showFilePagination" />
-      </div>
-    </div>
-
     <!-- 添加分屏容器 -->
     <div class="split-container" :class="{ 'split-active': showBookViewer }">
       <!-- 左侧地图区域 -->
       <div class="map-section" :class="{ 'map-shrink': showBookViewer }">
         <div id="map" ref="mapContainer">
-          <!-- 测量工具栏 - 修改为独立按钮 -->
-          <div class="map-controls-group">
-            <!-- 重置视图图标 -->
-            <div class="reset-view-icon" @click="resetView" title="重置视图">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <g class="globe-paths">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
-                  <path d="M12 3C12 3 8 7 8 12C8 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M12 3C12 3 16 7 16 12C16 17 12 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M3 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </g>
-              </svg>
-            </div>
-            
-            <!-- 测距按钮 -->
-            <div 
-              class="map-control-icon" 
-              :class="{ active: currentTool === 'distance' }"
-              @click="toggleMeasurement('distance')" 
-              title="测距"
-            >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M5 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M19 8V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M12 7V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </div>
-            
-            <!-- 测面按钮 -->
-            <div 
-              class="map-control-icon" 
-              :class="{ active: currentTool === 'area' }"
-              @click="toggleMeasurement('area')" 
-              title="测面"
-            >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 6L12 3L21 6V18L12 21L3 18V6Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                <path d="M12 3V21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M3 6L21 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M21 6L3 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </div>
-            
-            <!-- 清除测量按钮 -->
-            <div 
-              class="map-control-icon" 
-              @click="clearMeasurements" 
-              title="清除测量"
-            >
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </div>
-          </div>
-
-          <!-- 图层控制面板 -->
-          <div id="controls">
-            <h3>专题底图数据</h3>
-            <!-- 添加清除按钮 -->
-            <div class="clear-button-container">
-              <button class="clear-button" @click="clearAllLayers" :disabled="!activeLayers.length">
-                <span class="clear-icon">🗑️</span>
-                <span>清除所有图层</span>
-              </button>
-            </div>
-            <!-- 底图选择下拉框 -->
-            <div class="basemap-selector">
-              <div class="selector-header" @click="toggleBasemapList">
-                <span>底图选择</span>
-                <span class="arrow">{{ showBasemapList ? '▼' : '▶' }}</span>
-              </div>
-              <div class="basemap-list" v-show="showBasemapList">
-                <div 
-                  v-for="map in basemaps" 
-                  :key="map.id"
-                  class="basemap-item"
-                  :class="{ active: currentBasemap === map.id }"
-                  @click="changeBasemap(map.id)"
-                >
-                  {{ map.name }}
-                </div>
-              </div>
-            </div>
-            <!-- 专题图层列表 -->
-            <ul>
-              <li v-for="(group, index) in layerGroups" :key="index">
-                <div @click="toggleGroup(index)" class="group-title">
-                  <strong>{{ group.title }}</strong>
-                  <span>{{ group.expanded ? "-" : "+" }}</span>
-                </div>
-                <ul v-show="group.expanded" class="layer-list">
-                  <li v-for="layer in group.layers" :key="layer.name">
-                    <input
-                      type="checkbox"
-                      :value="layer.name"
-                      v-model="activeLayers"
-                      @change="toggleLayer(layer)"
-                    />
-                    <label>{{ layer.name }}</label>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-          
           <!-- 添加 AI 对话框 -->
           <AIChatBox 
             v-if="map"
@@ -193,26 +62,42 @@
           
           <!-- 内容显示区域 -->
           <div class="content-display">
-            <iframe 
-              v-if="activeTab === 'info' && currentBook.infoUrl"
-              :src="currentBook.infoUrl"
-              frameborder="0"
-              class="content-iframe"
-            ></iframe>
-            <iframe 
-              v-if="activeTab === 'text' && currentBook.textUrl"
-              :src="currentBook.textUrl"
-              frameborder="0"
-              class="content-iframe"
-            ></iframe>
-            <iframe 
-              v-if="activeTab === 'image' && currentBook.imageUrl"
-              :src="currentBook.imageUrl"
-              frameborder="0"
-              class="content-iframe"
-            ></iframe>
+            <div v-if="activeTab === 'info'" class="content-section">
+              <div class="content-placeholder">
+                <h3>{{ currentBook.title }}</h3>
+                <p>这里将显示关于 {{ currentBook.title }} 的详细信息。</p>
+                <div class="placeholder-content">
+                  <p>板块基本信息</p>
+                  <ul>
+                    <li>位置：亚洲地区</li>
+                    <li>面积：约 XXX 平方公里</li>
+                    <li>形成时期：XXX</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div v-if="activeTab === 'text'" class="content-section">
+              <div class="content-placeholder">
+                <h3>文字描述</h3>
+                <p>这里将显示关于 {{ currentBook.title }} 的详细文字描述。</p>
+                <div class="placeholder-content">
+                  <p>板块详细信息将在这里展示...</p>
+                </div>
+              </div>
+            </div>
+            <div v-if="activeTab === 'image'" class="content-section">
+              <div class="content-placeholder">
+                <h3>图片展示</h3>
+                <p>这里将显示关于 {{ currentBook.title }} 的相关图片。</p>
+                <div class="placeholder-content">
+                  <div class="image-placeholder">
+                    <span class="placeholder-icon">🖼️</span>
+                    <p>图片加载区域</p>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div v-if="activeTab === 'table'" class="table-display">
-              <!-- 表格展示区域，后续会链接到后端 -->
               <div class="table-header">
                 <h4>数据表格展示</h4>
                 <div class="table-actions">
@@ -227,8 +112,8 @@
               <div class="table-content">
                 <div class="table-placeholder">
                   <div class="placeholder-icon">📊</div>
-                  <p>表格数据加载区域</p>
-                  <p class="note">此区域将链接到后端数据</p>
+                  <p>{{ currentBook.title }} 的数据表格</p>
+                  <p class="note">此区域将显示详细数据</p>
                 </div>
               </div>
             </div>
@@ -239,10 +124,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { ref, onMounted, nextTick, computed } from "vue";
+import { ref, onMounted, nextTick, computed, defineProps, defineEmits } from "vue";
 import AIChatBox from './AIChatBox.vue';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
@@ -250,15 +135,50 @@ import * as turf from '@turf/turf';
 import FileUpload from './FileUpload.vue';
 import FilePagination from './FilePagination.vue';
 
-// Mapbox 相关初始化
-mapboxgl.accessToken =
-  "pk.eyJ1IjoiY3VkODUiLCJhIjoiY2xrYnFncXZhMGc1cTNlbmFrNHN1N2cxeCJ9.69E3f8nMJkvqQDRhLSojVw";
+// 设置 Mapbox token
+mapboxgl.accessToken = "pk.eyJ1IjoiY3VkODUiLCJhIjoiY2xrYnFncXZhMGc1cTNlbmFrNHN1N2cxeCJ9.69E3f8nMJkvqQDRhLSojVw";
 
-const mapContainer = ref(null);
-const map = ref(null);
-const draw = ref(null);
-const currentTool = ref(null);
-const activeLayers = ref([]); // 当前激活的图层数组
+// 声明 MapboxDraw 模块
+declare module '@mapbox/mapbox-gl-draw';
+
+// 定义接口
+interface Layer {
+  name: string;
+  url: string;
+  type: string;
+  layerName?: string;
+}
+
+// 定义 Book 接口
+interface Book {
+  title: string;
+  infoUrl?: string;
+  textUrl?: string;
+  imageUrl?: string;
+  url: string;
+}
+
+// 定义props
+const props = defineProps<{
+  activeLayers: string[];
+  currentBasemap: string;
+}>();
+
+// 定义emits
+const emit = defineEmits<{
+  'toggle-layer': [layer: Layer];
+  'add-layer': [layer: Layer];
+  'remove-layer': [layerName: string];
+  'clear-all-layers': [];
+  'change-basemap': [mapId: string];
+  'book-viewer-change': [isVisible: boolean];
+}>();
+
+// Mapbox 相关初始化
+const mapContainer = ref<HTMLElement | null>(null);
+const map = ref<mapboxgl.Map | null>(null);
+const draw = ref<MapboxDraw | null>(null);
+const currentTool = ref<string | null>(null);
 
 // 图层分组配置
 const layerGroups = ref([
@@ -363,33 +283,38 @@ const toggleBasemapList = () => {
 };
 
 // 切换底图
-const changeBasemap = (mapId) => {
+const changeBasemap = (mapId: string) => {
+  if (!map.value) return;
+
   const selectedMap = basemaps.find(m => m.id === mapId);
   if (selectedMap) {
     map.value.setStyle(selectedMap.style);
     currentBasemap.value = mapId;
   }
   showBasemapList.value = false;
+  emit('change-basemap', mapId);
 };
 
 // 切换分组展开/折叠
-const toggleGroup = (index) => {
+const toggleGroup = (index: number) => {
   layerGroups.value[index].expanded = !layerGroups.value[index].expanded;
 };
 
 // 切换图层的显示/隐藏
-const toggleLayer = (layer) => {
-  if (activeLayers.value.includes(layer.name)) {
-    // 如果激活图层中包含该图层，则添加
-    addLayer(layer);
-  } else {
-    // 否则移除
+const toggleLayer = (layer: Layer) => {
+  const isActive = props.activeLayers.includes(layer.name);
+  if (isActive) {
     removeLayer(layer.name);
+  } else {
+    addLayer(layer);
   }
+  emit('toggle-layer', layer);
 };
 
 // 添加图层到地图
-const addLayer = (layer) => {
+const addLayer = (layer: Layer) => {
+  if (!map.value) return;
+
   if (layer.type === "WFS") {
     // WFS 图层
     const wfsUrl = `${layer.url}?service=WFS&version=1.0.0&request=GetFeature&typeName=${layer.layerName}&maxFeatures=50&outputFormat=application/json`;
@@ -397,6 +322,7 @@ const addLayer = (layer) => {
     fetch(wfsUrl)
       .then((response) => response.json())
       .then((data) => {
+        if (!map.value) return;
         // 如果图层已经存在，则不重复添加
         if (map.value.getSource(layer.name)) return;
 
@@ -409,13 +335,18 @@ const addLayer = (layer) => {
         // 添加图层
         map.value.addLayer({
           id: layer.name,
-          type: "fill", // 根据数据类型可以选择 'fill'、'line'、'circle' 等
+          type: "fill",
           source: layer.name,
           paint: {
-            "fill-color": getRandomColor(), // 动态生成颜色
+            "fill-color": getRandomColor(),
             "fill-opacity": 0.5,
           },
         });
+        
+        // 如果是主板块图层，添加点击事件监听器
+        if (layer.name === "主板块") {
+          map.value.on('click', '主板块', showBookInfo);
+        }
       })
       .catch((error) => {
         console.error("Error loading WFS layer:", error);
@@ -436,16 +367,20 @@ const addLayer = (layer) => {
       },
     });
   }
+  emit('add-layer', layer);
 };
 
 // 移除图层
-const removeLayer = (layerName) => {
+const removeLayer = (layerName: string) => {
+  if (!map.value) return;
+
   if (map.value.getLayer(layerName)) {
     map.value.removeLayer(layerName);
   }
   if (map.value.getSource(layerName)) {
     map.value.removeSource(layerName);
   }
+  emit('remove-layer', layerName);
 };
 
 // 随机生成图层颜色
@@ -458,112 +393,76 @@ const getRandomColor = () => {
   return color;
 };
 
-// 添加清除所有图层的方法
+// 清除所有图层
 const clearAllLayers = () => {
-  // 遍历所有激活的图层并移除
-  activeLayers.value.forEach(layerName => {
+  props.activeLayers.forEach(layerName => {
     removeLayer(layerName);
   });
-  // 清空激活图层数组
-  activeLayers.value = [];
+  emit('clear-all-layers');
 };
 
-// 处理图层切换
-const handleToggleLayers = (layerNames) => {
-  layerNames.forEach(name => {
-    const layer = layerGroups.value[0].layers.find(l => l.name === name);
+// 切换地图显示
+const toggleMap = () => {
+  showMap.value = !showMap.value;
+};
+
+// 添加活动标签状态
+const activeTab = ref('info');  // 默认显示书籍信息
+
+// 添加 resetView 方法
+const resetView = () => {
+  if (!map.value) return;
+  map.value.flyTo({
+    center: [118.7915619, 32.0615513],
+    zoom: 3,
+    bearing: 0,
+    pitch: 0
+  });
+};
+
+// 添加 handleToggleLayers 方法
+const handleToggleLayers = (layers: string[]) => {
+  layers.forEach(layerName => {
+    const layer = layerGroups.value[0].layers.find(l => l.name === layerName);
     if (layer) {
-      if (!activeLayers.value.includes(name)) {
-        activeLayers.value.push(name);
+      if (props.activeLayers.includes(layerName)) {
+        removeLayer(layerName);
+      } else {
         addLayer(layer);
       }
     }
   });
 };
 
-// 添加重置视图函数
-const resetView = () => {
-  map.value.flyTo({
-    center: [108.9398, 34.3409], // 中国中心位置
-    zoom: 4,  // 适合查看整个中国的缩放级别
-    bearing: 0, // 恢复默认方向
-    pitch: 0    // 恢复默认俯仰角
-  });
-};
+// 添加测量相关方法
+const toggleMeasurement = (type: string) => {
+  if (!draw.value) return;
 
-// 初始化地图
-onMounted(async () => {
-  if (mapContainer.value) {
-    try {
-      // 创建地图实例
-      map.value = new mapboxgl.Map({
-        container: mapContainer.value,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [118.7915619, 32.0615513],
-        zoom: 3,
-        preserveDrawingBuffer: true
-      });
-
-      // 等待地图加载完成
-      await new Promise((resolve) => {
-        map.value.on('load', () => {
-          console.log('Map loaded successfully');
-          resolve();
-        });
-      });
-
-      // 初始化绘图工具
-      draw.value = new MapboxDraw({
-        displayControlsDefault: false,
-        controls: {
-          line_string: true,
-          polygon: true,
-          trash: true
-        }
-      });
-
-      // 添加绘图控件
-      map.value.addControl(draw.value);
-
-      // 添加事件监听
-      map.value.on('draw.create', updateMeasurement);
-      map.value.on('draw.update', updateMeasurement);
-      map.value.on('draw.delete', clearMeasurements);
-
-    } catch (error) {
-      console.error('Map initialization error:', error);
-    }
-  }
-});
-
-// 测量相关方法
-const toggleMeasurement = (type) => {
   if (currentTool.value === type) {
     currentTool.value = null;
-    draw.value?.deleteAll();
-    draw.value?.changeMode('simple_select');
+    draw.value.deleteAll();
+    draw.value.changeMode('simple_select');
   } else {
     currentTool.value = type;
-    draw.value?.deleteAll();
+    draw.value.deleteAll();
     if (type === 'area') {
-      draw.value?.changeMode('draw_polygon');
+      draw.value.changeMode('draw_polygon');
     } else if (type === 'distance') {
-      draw.value?.changeMode('draw_line_string');
+      draw.value.changeMode('draw_line_string');
     }
   }
 };
 
 // 更新测量结果显示方法
-const updateMeasurement = (e) => {
-  if (!e.features.length) return;
+const updateMeasurement = (e: { features: any[] }) => {
+  if (!e.features.length || !map.value) return;
   
   const data = e.features[0];
   if (data.geometry.type === 'Polygon' && currentTool.value === 'area') {
     const area = turf.area(data);
     const areaKm = (area / 1000000).toFixed(2);
     
-    // 创建一个固定的弹窗
-    const popup = new mapboxgl.Popup({
+    new mapboxgl.Popup({
       closeButton: false,
       closeOnClick: false,
       className: 'measurement-result'
@@ -576,8 +475,7 @@ const updateMeasurement = (e) => {
     const length = turf.length(data, { units: 'kilometers' }).toFixed(2);
     const coordinates = data.geometry.coordinates;
     
-    // 创建一个固定的弹窗
-    const popup = new mapboxgl.Popup({
+    new mapboxgl.Popup({
       closeButton: false,
       closeOnClick: false,
       className: 'measurement-result'
@@ -588,9 +486,11 @@ const updateMeasurement = (e) => {
   }
 };
 
-// 修改清除测量方法
+// 清除测量
 const clearMeasurements = () => {
-  draw.value?.deleteAll();
+  if (!draw.value) return;
+
+  draw.value.deleteAll();
   currentTool.value = null;
   
   // 移除所有测量结果弹窗
@@ -600,66 +500,25 @@ const clearMeasurements = () => {
   }
 };
 
-// 添加地图移动事件监听，更新测量结果位置
-onMounted(() => {
-  // ... 现有的初始化代码 ...
-
-  // 添加地图移动事件监听
-  map.value.on('move', () => {
-    const measurementDiv = document.getElementById('measurement-result');
-    if (measurementDiv && draw.value.getAll().features.length > 0) {
-      const feature = draw.value.getAll().features[0];
-      if (feature.geometry.type === 'Polygon') {
-        const center = turf.center(feature);
-        const point = map.value.project(center.geometry.coordinates);
-        measurementDiv.style.left = `${point.x + 10}px`;
-        measurementDiv.style.top = `${point.y - 30}px`;
-      } else if (feature.geometry.type === 'LineString') {
-        const coordinates = feature.geometry.coordinates;
-        const endPoint = coordinates[coordinates.length - 1];
-        const point = map.value.project(endPoint);
-        measurementDiv.style.left = `${point.x + 10}px`;
-        measurementDiv.style.top = `${point.y - 30}px`;
-      }
-    }
-  });
-});
-
 // 添加分屏相关状态
 const showBookViewer = ref(false);
-const currentBook = ref({
+const currentBook = ref<Book>({
   title: '',
+  infoUrl: '',
+  textUrl: '',
+  imageUrl: '',
   url: ''
-});
-
-// 在地图初始化时添加点击事件监听
-onMounted(async () => {
-  // ... 现有的初始化代码 ...
-
-  // 添加主板块图层点击事件
-  map.value.on('click', '主板块', (e) => {
-    if (e.features.length > 0) {
-      const feature = e.features[0];
-      currentBook.value = {
-        title: feature.properties.name || '板块信息',
-        url: 'https://example.com/book' // 替换为实际URL
-      };
-      showBookViewer.value = true;
-      
-      // 触发地图重新渲染以适应新的容器大小
-      setTimeout(() => {
-        map.value.resize();
-      }, 300);
-    }
-  });
 });
 
 // 关闭书籍查看器
 const closeBookViewer = () => {
   showBookViewer.value = false;
-  setTimeout(() => {
-    map.value.resize();
-  }, 300);
+  emit('book-viewer-change', false);
+  if (map.value) {
+    setTimeout(() => {
+      map.value?.resize();
+    }, 300);
+  }
 };
 
 // 添加状态控制
@@ -684,524 +543,122 @@ const toggleFilePagination = () => {
   showFileUpload.value = false;
 };
 
-// 切换地图显示
-const toggleMap = () => {
-  showMap.value = !showMap.value;
+// 在打开书籍查看器的地方添加事件发送
+const showBookInfo = (e: any) => {
+  // 确保有features并且至少有一个feature
+  if (e.features?.length > 0) {
+    const feature = e.features[0];
+    const name = feature.properties?.name || '板块信息';
+    
+    // 设置当前书籍信息，包括所有必要的URL
+    currentBook.value = {
+      title: name,
+      infoUrl: `https://example.com/info/${name}`,
+      textUrl: `https://example.com/text/${name}`,
+      imageUrl: `https://example.com/image/${name}`,
+      url: `https://example.com/book/${name}`
+    };
+    
+    // 显示书籍查看器并发送事件
+    showBookViewer.value = true;
+    emit('book-viewer-change', true);
+    
+    // 调整地图大小以适应新的容器尺寸
+    setTimeout(() => {
+      map.value?.resize();
+    }, 300);
+  }
 };
 
-// 添加活动标签状态
-const activeTab = ref('info');  // 默认显示书籍信息
+// 初始化地图
+onMounted(() => {
+  if (!mapContainer.value) return;
+
+  map.value = new mapboxgl.Map({
+    container: mapContainer.value,
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [118.7915619, 32.0615513],
+    zoom: 3,
+    preserveDrawingBuffer: true
+  });
+
+  map.value.on('load', () => {
+    if (!map.value) return;
+    
+    // 初始化绘图工具
+    draw.value = new MapboxDraw({
+      displayControlsDefault: false,
+      controls: {
+        line_string: true,
+        polygon: true,
+        trash: true
+      }
+    });
+
+    map.value.addControl(draw.value);
+
+    // 添加事件监听
+    map.value.on('draw.create', updateMeasurement);
+    map.value.on('draw.update', updateMeasurement);
+    map.value.on('draw.delete', clearMeasurements);
+
+    // 添加地图移动事件监听
+    map.value.on('move', () => {
+      const measurementDiv = document.getElementById('measurement-result');
+      if (measurementDiv && draw.value) {
+        const features = draw.value.getAll().features;
+        if (features && features.length > 0) {
+          const feature = features[0];
+          if (feature.geometry.type === 'Polygon') {
+            const center = turf.center(feature);
+            const coordinates = center.geometry.coordinates as [number, number];
+            if (map.value) {
+              const point = map.value.project(coordinates);
+              measurementDiv.style.left = `${point.x + 10}px`;
+              measurementDiv.style.top = `${point.y - 30}px`;
+            }
+          } else if (feature.geometry.type === 'LineString') {
+            const coordinates = feature.geometry.coordinates;
+            const endPoint = coordinates[coordinates.length - 1] as [number, number];
+            if (map.value) {
+              const point = map.value.project(endPoint);
+              measurementDiv.style.left = `${point.x + 10}px`;
+              measurementDiv.style.top = `${point.y - 30}px`;
+            }
+          }
+        }
+      }
+    });
+  });
+});
+
+// 暴露测量相关方法给父组件
+defineExpose({
+  toggleLayer,
+  addLayer,
+  removeLayer,
+  clearAllLayers,
+  changeBasemap,
+  resetView,
+  toggleMeasurement,
+  clearMeasurements
+});
 </script>
 
 <style scoped>
-#map {
+.map-container {
   position: relative;
   width: 100%;
   height: 100vh;
-}
-
-#controls {
-  position: absolute;
-  top: 50%;
-  right: 20px;
-  transform: translateY(-50%);
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  max-height: 80vh;
-  overflow-y: auto;
-  min-width: 300px;
-  max-width: 400px;
-  transition: all 0.3s ease;
-  border: 1px solid #f0f0f0;
-  backdrop-filter: blur(10px);
-}
-
-#controls h3 {
-  margin: 0 0 15px 0;
-  color: #333;
-  font-size: 16px;
-  font-weight: 600;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 10px;
-  text-align: center;
-  position: relative;
-}
-
-#controls h3::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 2px;
-  background: #3b82f6;
-}
-
-#controls .group-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  padding: 10px 12px;
-  background: #f9fafb;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  margin-bottom: 8px;
-}
-
-#controls .group-title:hover {
-  background: #f3f4f6;
-  border-color: #e5e7eb;
-}
-
-#controls .group-title strong {
-  font-size: 14px;
-  color: #4b5563;
-}
-
-#controls .group-title span {
-  color: #9ca3af;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-#controls .layer-list {
-  padding: 8px 12px 8px 24px;
-  background: #ffffff;
-  border-radius: 8px;
-  margin: 4px 0 12px;
-  border: 1px solid #f0f0f0;
-}
-
-#controls .layer-list li {
-  display: flex;
-  align-items: center;
-  padding: 6px 0;
-  transition: background-color 0.2s ease;
-  border-radius: 4px;
-}
-
-#controls .layer-list li:hover {
-  background: #f9fafb;
-}
-
-#controls input[type="checkbox"] {
-  margin-right: 8px;
-  cursor: pointer;
-  width: 16px;
-  height: 16px;
-  accent-color: #3b82f6;
-}
-
-#controls label {
-  cursor: pointer;
-  font-size: 13px;
-  color: #4b5563;
-}
-
-#controls label:hover {
-  color: #1f2937;
-}
-
-/* 清除按钮容器样式 */
-.clear-button-container {
-  margin-bottom: 16px;
-  padding: 0 4px;
-}
-
-.clear-button {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 12px;
-  background: #f9fafb;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #6b7280;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.clear-button:hover:not(:disabled) {
-  background: #fee2e2;
-  border-color: #ef4444;
-  color: #dc2626;
-}
-
-.clear-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.clear-icon {
-  margin-right: 8px;
-  font-size: 16px;
-}
-
-/* 底图选择器样式 */
-.basemap-selector {
-  margin-bottom: 16px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
   overflow: hidden;
-}
-
-.selector-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: #f9fafb;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  color: #4b5563;
-}
-
-.selector-header:hover {
-  background: #f3f4f6;
-  color: #3b82f6;
-}
-
-.arrow {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.basemap-list {
-  background: #fff;
-  border-top: 1px solid #f0f0f0;
-}
-
-.basemap-item {
-  padding: 10px 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.basemap-item:last-child {
-  border-bottom: none;
-}
-
-.basemap-item:hover {
-  background: #f3f4f6;
-}
-
-.basemap-item.active {
-  background: #eff6ff;
-  color: #3b82f6;
-  font-weight: 500;
-}
-
-/* 重置视图按钮样式 */
-.reset-view-icon {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  z-index: 1000;
-  opacity: 0.9;
-  transition: all 0.3s ease;
-  color: #3b82f6;
-  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
-  background: white;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f0f0;
-}
-
-.reset-view-icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-.reset-view-icon:hover {
-  transform: scale(1.05);
-  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4));
-  background: #f0f7ff;
-}
-
-.reset-view-icon:active {
-  transform: scale(0.95);
-}
-
-/* 添加笔画动画效果 */
-.globe-paths {
-  stroke-dasharray: 100;
-  animation: drawGlobe 2s ease-out forwards;
-}
-
-@keyframes drawGlobe {
-  from {
-    stroke-dashoffset: 100;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* 修改测量工具栏位置 */
-.measure-toolbar {
-  display: none; /* 隐藏旧的工具栏 */
-}
-
-/* 添加地图控制按钮组样式 */
-.map-controls-group {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 1000;
-}
-
-/* 通用地图控制图标样式 */
-.map-control-icon {
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  z-index: 1000;
-  opacity: 0.9;
-  transition: all 0.3s ease;
-  color: #3b82f6;
-  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
-  background: white;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f0f0;
-}
-
-.map-control-icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-.map-control-icon:hover {
-  transform: scale(1.05);
-  filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4));
-  background: #f0f7ff;
-}
-
-.map-control-icon:active {
-  transform: scale(0.95);
-}
-
-.map-control-icon.active {
-  background: #eff6ff;
-  color: #3b82f6;
-  border-color: #3b82f6;
-  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
-}
-
-/* 测量结果弹窗样式 */
-.mapboxgl-popup-content {
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f0f0f0;
-  background: white;
-}
-
-.measurement-value {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1f2937;
-  white-space: nowrap;
-}
-
-/* 隐藏弹窗尖角 */
-.measurement-result .mapboxgl-popup-tip {
-  display: none;
-}
-
-/* 重置视图按钮样式保持不变，但移动到控制组中 */
-.reset-view-icon {
-  position: relative;
-  top: 0;
-  left: 0;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  z-index: 1000;
-  opacity: 0.9;
-  transition: all 0.3s ease;
-  color: #3b82f6;
-  filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
-  background: white;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0f0f0;
-}
-
-/* 修改地图缩小时的控制组样式 */
-.map-section.map-shrink {
-  flex: 0 0 60%;
-  transform: scale(0.8);
-  
-  /* 调整控件位置和缩放 */
-  #controls {
-    position: absolute;
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%) scale(1);  /* 从0.9改为1，避免缩小文字 */
-    transform-origin: right center;
-    font-size: 115%;  /* 进一步增加字体大小 */
-    background: rgba(255, 255, 255, 1);  /* 完全不透明背景 */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);  /* 增强阴影效果 */
-    
-    /* 提高文字渲染质量 */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    
-    /* 避免缩放导致的模糊 */
-    backface-visibility: hidden;
-    perspective: 1000px;
-    
-    /* 增强边框对比度 */
-    border: 1px solid rgba(0, 0, 0, 0.1);
-  }
-  
-  #controls h3 {
-    font-size: 18px;  /* 进一步增加标题字体大小 */
-    font-weight: 700;  /* 加粗标题 */
-    color: #111;  /* 更深的标题颜色 */
-    letter-spacing: 0.3px;  /* 增加字母间距 */
-    text-shadow: 0 0 1px rgba(0,0,0,0.05);  /* 轻微文字阴影增强清晰度 */
-  }
-  
-  #controls .group-title strong {
-    font-size: 16px;  /* 进一步增加分组标题字体大小 */
-    color: #222;  /* 更深的分组标题颜色 */
-    font-weight: 600;  /* 加粗分组标题 */
-    letter-spacing: 0.2px;  /* 增加字母间距 */
-  }
-  
-  #controls label {
-    font-size: 15px;  /* 进一步增加标签字体大小 */
-    color: #222;  /* 更深的标签颜色 */
-    font-weight: 500;  /* 稍微加粗标签 */
-  }
-  
-  /* 调整控制组的缩放比例 */
-  .map-controls-group {
-    transform: scale(1.1);
-    transform-origin: left top;
-  }
-  
-  .ai-chat-box {
-    transform: scale(0.9);
-    transform-origin: right bottom;
-    right: 20px;
-  }
-
-  /* 补偿地图容器尺寸 */
-  #map {
-    width: 125%;
-    height: 125%;
-    transform-origin: left top;
-  }
-  
-  /* 优化图层列表文字渲染 */
-  .layer-list {
-    background: #ffffff;  /* 纯白背景 */
-    border: 1px solid rgba(0, 0, 0, 0.1);  /* 增强边框对比度 */
-    
-    li {
-      padding: 10px 0;  /* 增加行高 */
-      margin: 2px 0;  /* 增加行间距 */
-    }
-    
-    label {
-      font-size: 15px !important;  /* 强制增加字体大小 */
-      letter-spacing: 0.3px;  /* 增加字母间距 */
-      text-shadow: 0 0 0.2px rgba(0,0,0,0.1);  /* 轻微文字阴影增强清晰度 */
-      display: inline-block;  /* 确保文本渲染正确 */
-      transform: translateZ(0);  /* 启用GPU加速 */
-    }
-  }
-  
-  /* 优化底图选择器文字 */
-  .basemap-selector {
-    border: 1px solid rgba(0, 0, 0, 0.1);  /* 增强边框对比度 */
-  }
-  
-  .selector-header {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-  }
-  
-  .basemap-item {
-    font-size: 15px;
-    padding: 12px 16px;  /* 增加内边距 */
-    letter-spacing: 0.2px;
-    font-weight: 500;
-  }
-  
-  /* 优化清除按钮文字 */
-  .clear-button {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-  }
-  
-  /* 优化复选框和标签的对齐 */
-  #controls input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    margin-right: 10px;
-    vertical-align: middle;
-  }
-}
-
-/* 全局优化文字渲染 */
-#controls {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* 调整顶部控制组件的位置，避免与新的控制按钮重叠 */
-.top-controls {
-  position: absolute;
-  top: 20px;
-  left: 80px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 400px;
 }
 
 /* 分屏布局样式 */
 .split-container {
-  width: 100%;
-  height: 100vh;
   display: flex;
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
@@ -1211,155 +668,312 @@ const activeTab = ref('info');  // 默认显示书籍信息
   position: relative;
   flex: 1;
   transition: all 0.3s ease;
-  transform-origin: left top;
+  width: 100%;
+  height: 100vh;
+  overflow: visible;
+}
+
+.map-section.map-shrink {
+  width: 60%;
+  flex: 0 0 60%;
 }
 
 /* 右侧书籍查看器样式 */
 .book-viewer {
   position: absolute;
-  right: -40%;
+  right: 0;
   top: 0;
   width: 40%;
   height: 100%;
   background: #ffffff;
-  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid #f0f0f0;
 }
 
 .book-viewer.viewer-show {
-  right: 0;
+  transform: translateX(0);
 }
 
 .viewer-header {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #ffffff;
-}
-
-.viewer-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
 }
 
 .close-viewer {
   background: none;
   border: none;
   font-size: 24px;
-  color: #999;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
+  padding: 4px;
+  color: #909399;
 }
 
 .close-viewer:hover {
-  background: #fee2e2;
-  color: #ef4444;
+  color: #606266;
+}
+
+/* 地图控件样式 */
+.map-controls-group {
+  position: absolute;
+  top: 10px;
+  right: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.map-control-icon, .reset-view-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+  border: 1px solid #e4e7ed;
+}
+
+.map-control-icon:hover, .reset-view-icon:hover {
+  background: #f5f7fa;
+  border-color: #c0c4cc;
+  transform: translateY(-1px);
+}
+
+.map-control-icon.active {
+  background: #409eff;
+  border-color: #409eff;
+  color: #ffffff;
+}
+
+.map-control-icon svg, .reset-view-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 分屏模式下的位置调整 */
+.split-active .map-controls-group {
+  right: calc(42% + 120px); /* 在分屏模式下保持相对位置 */
+}
+
+/* 地图容器样式调整 */
+#map {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* 分屏布局样式调整 */
+.split-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.map-section {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.map-section.map-shrink {
+  flex: 0 0 60%;
+}
+
+/* 书籍查看器样式调整 */
+.book-viewer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 40%;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+}
+
+.book-viewer.viewer-show {
+  transform: translateX(0);
+}
+
+.viewer-header {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-viewer {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  color: #909399;
+}
+
+.close-viewer:hover {
+  color: #606266;
 }
 
 .viewer-content {
   flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  height: calc(100% - 60px); /* 减去header的高度 */
+  background: #fff;
 }
 
 .content-tabs {
-  padding: 0;
+  padding: 12px 16px;
   display: flex;
-  background: #f9fafb;
+  gap: 8px;
   border-bottom: 1px solid #f0f0f0;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .tab-btn {
-  flex: 1;
-  padding: 14px 8px;
+  padding: 8px 16px;
   border: none;
-  background: transparent;
-  color: #666;
+  background: none;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 6px;
-  position: relative;
+  color: #606266;
+  transition: all 0.3s ease;
+  font-size: 14px;
 }
 
 .tab-btn:hover {
-  background: #f3f4f6;
-  color: #3b82f6;
+  background: #f5f7fa;
+  color: #409eff;
 }
 
 .tab-btn.active {
-  background: #ffffff;
-  color: #3b82f6;
-}
-
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: #3b82f6;
+  background: #ecf5ff;
+  color: #409eff;
+  font-weight: 500;
 }
 
 .tab-icon {
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .content-display {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  padding: 20px;
   background: #fff;
 }
 
-.content-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
+.content-section {
   background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #f0f0f0;
 }
 
-/* 表格展示区域样式 */
-.table-display {
-  width: 100%;
-  height: 100%;
+.content-placeholder {
+  text-align: center;
+  padding: 20px;
+}
+
+.content-placeholder h3 {
+  margin-bottom: 16px;
+  color: #303133;
+  font-size: 18px;
+}
+
+.content-placeholder p {
+  color: #606266;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.placeholder-content {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: left;
+}
+
+.placeholder-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0 0;
+}
+
+.placeholder-content li {
+  padding: 8px 0;
+  color: #606266;
+  border-bottom: 1px dashed #e4e7ed;
+  font-size: 14px;
+}
+
+.placeholder-content li:last-child {
+  border-bottom: none;
+}
+
+.image-placeholder {
+  background: #f5f7fa;
+  border-radius: 8px;
+  padding: 40px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  color: #909399;
+}
+
+.table-display {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  height: 100%;
 }
 
 .table-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .table-header h4 {
   margin: 0;
   font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  color: #303133;
 }
 
 .table-actions {
@@ -1368,231 +982,26 @@ const activeTab = ref('info');  // 默认显示书籍信息
 }
 
 .action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  border: 1px solid #eaeaea;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-btn:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
-}
-
-.refresh-btn:hover {
-  color: #3b82f6;
-}
-
-.export-btn:hover {
-  color: #10b981;
-}
-
-.table-content {
-  flex: 1;
-  padding: 20px;
-  overflow: auto;
-}
-
-.table-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  background: #f9fafb;
-  border-radius: 12px;
-  padding: 40px;
-  text-align: center;
-}
-
-.placeholder-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  color: #d1d5db;
-}
-
-.table-placeholder p {
-  margin: 5px 0;
-  font-size: 16px;
-  color: #6b7280;
-}
-
-.table-placeholder .note {
-  font-size: 14px;
-  color: #9ca3af;
-  margin-top: 8px;
-}
-
-/* 自定义滚动条 */
-.table-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.table-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.table-content::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 3px;
-}
-
-.table-content::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .map-section.map-shrink {
-    display: none;
-  }
-  
-  .book-viewer {
-    width: 100%;
-    right: -100%;
-  }
-  
-  .book-viewer.viewer-show {
-    right: 0;
-    width: 100%;
-  }
-}
-
-/* 添加左上角功能控制组件样式 */
-.top-controls {
-  position: absolute;
-  top: 20px;
-  left: 80px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 400px;
-}
-
-.control-buttons {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;  /* 改为两端对齐 */
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.95);
   padding: 8px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  width: 100%;  /* 占满容器宽度 */
-}
-
-.control-btn {
-  flex: 1;  /* 平均分配空间 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  background: #f5f7fa;
-  border: 1px solid #e4e7ed;
-  border-radius: 6px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #fff;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 64px;
-  height: 40px;
-}
-
-.control-btn:hover {
-  background: #ecf5ff;
-  border-color: #409eff;
-  transform: translateY(-2px);
-}
-
-.btn-icon {
-  font-size: 20px;
-  margin-bottom: 4px;
-}
-
-.btn-text {
-  font-size: 12px;
   color: #606266;
 }
 
-.panel-content {
-  background: rgba(255, 255, 255, 0.95);
+.action-btn:hover {
+  background: #f5f7fa;
+  border-color: #c0c4cc;
+  color: #409eff;
+}
+
+.table-content {
+  min-height: 200px;
+  border: 1px solid #f0f0f0;
   border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  max-width: 400px;
-  max-height: 600px;
-  overflow-y: auto;
-  width: 100%;
-}
-
-/* 确保文件列表内容更紧凑 */
-:deep(.file-list-item) {
-  padding: 10px;
-  margin-bottom: 8px;
-}
-
-:deep(.file-pagination) {
-  margin-top: 12px;
-}
-
-/* 优化文件列表表格布局 */
-:deep(.file-table) {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-:deep(.file-table th),
-:deep(.file-table td) {
-  padding: 8px;
-  text-align: left;
-  white-space: nowrap;
-}
-
-:deep(.file-table-container) {
-  overflow-x: auto;
-  margin-bottom: 10px;
-}
-
-/* 调整专题底图数据面板的基础尺寸 */
-#controls {
-  min-width: 300px;
-  max-width: 400px;
-  padding: 20px;
-}
-
-/* 调整测量工具栏按钮的大小 */
-.measure-btn {
-  padding: 8px 16px;
-  height: 40px;       /* 增加高度 */
-  font-size: 15px;    /* 增加字体大小 */
-  min-width: 90px;    /* 添加最小宽度 */
-  
-  .icon {
-    font-size: 18px;  /* 增加图标大小 */
-  }
-}
-
-.table-display {
-  width: 100%;
-  height: 100%;
-  padding: 15px;
-  overflow: auto;
-}
-
-.table-display h4 {
-  margin-top: 0;
-  margin-bottom: 16px;
-  font-size: 16px;
-  color: #333;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
+  overflow: hidden;
 }
 
 .table-placeholder {
@@ -1600,22 +1009,15 @@ const activeTab = ref('info');  // 默认显示书籍信息
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: calc(100% - 50px);
-  background: #f9f9f9;
-  border: 1px dashed #ddd;
+  padding: 40px;
+  background: #f5f7fa;
   border-radius: 8px;
-  padding: 20px;
-}
-
-.table-placeholder p {
-  margin: 5px 0;
-  font-size: 16px;
-  color: #666;
+  gap: 16px;
+  height: 100%;
 }
 
 .table-placeholder .note {
+  color: #909399;
   font-size: 14px;
-  color: #999;
-  font-style: italic;
 }
 </style>
