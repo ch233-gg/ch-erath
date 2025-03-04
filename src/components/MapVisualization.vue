@@ -646,11 +646,21 @@ defineExpose({
 </script>
 
 <style scoped>
+/* 直接使用颜色值而不是CSS变量 */
 .map-container {
   position: relative;
   width: 100%;
   height: 100vh;
   overflow: hidden;
+  color-scheme: dark;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* 分屏布局样式 */
@@ -668,9 +678,8 @@ defineExpose({
   position: relative;
   flex: 1;
   transition: all 0.3s ease;
-  width: 100%;
-  height: 100vh;
-  overflow: visible;
+  height: 100%;
+  overflow: hidden;
 }
 
 .map-section.map-shrink {
@@ -685,339 +694,317 @@ defineExpose({
   top: 0;
   width: 40%;
   height: 100%;
-  background: #ffffff;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  background: #0a1219; /* 深色背景 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid #1a2635;
   transform: translateX(100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-}
-
-.book-viewer.viewer-show {
-  transform: translateX(0);
-}
-
-.viewer-header {
-  padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.close-viewer {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 4px;
-  color: #909399;
-}
-
-.close-viewer:hover {
-  color: #606266;
-}
-
-/* 地图控件样式 */
-.map-controls-group {
-  position: absolute;
-  top: 10px;
-  right: 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 8px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 1;
-}
-
-.map-control-icon, .reset-view-icon {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #666;
-  border: 1px solid #e4e7ed;
-}
-
-.map-control-icon:hover, .reset-view-icon:hover {
-  background: #f5f7fa;
-  border-color: #c0c4cc;
-  transform: translateY(-1px);
-}
-
-.map-control-icon.active {
-  background: #409eff;
-  border-color: #409eff;
   color: #ffffff;
 }
 
-.map-control-icon svg, .reset-view-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* 分屏模式下的位置调整 */
-.split-active .map-controls-group {
-  right: calc(42% + 120px); /* 在分屏模式下保持相对位置 */
-}
-
-/* 地图容器样式调整 */
-#map {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-/* 分屏布局样式调整 */
-.split-container {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  transition: all 0.3s ease;
-}
-
-.map-section {
-  flex: 1;
-  height: 100%;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.map-section.map-shrink {
-  flex: 0 0 60%;
-}
-
-/* 书籍查看器样式调整 */
-.book-viewer {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 40%;
-  height: 100%;
-  background: #ffffff;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-  z-index: 1000;
-}
-
 .book-viewer.viewer-show {
   transform: translateX(0);
 }
 
 .viewer-header {
-  padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 24px;
+  background: #111a24; /* 卡片背景色 */
+  border-bottom: 1px solid #1a2635;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+.viewer-header h3 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  background: linear-gradient(135deg, #00e5b0 0%, #00a3ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .close-viewer {
-  background: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  font-size: 24px;
+  color: #ffffff;
   cursor: pointer;
-  padding: 4px;
-  color: #909399;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
 }
 
 .close-viewer:hover {
-  color: #606266;
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
 }
 
 .viewer-content {
-  flex: 1;
+  height: calc(100% - 80px);
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  height: calc(100% - 60px); /* 减去header的高度 */
-  background: #fff;
+  background: #0a1219; /* 深色背景 */
 }
 
+/* 标签页样式优化 */
 .content-tabs {
-  padding: 12px 16px;
+  padding: 0 24px;
+  background: #111a24; /* 卡片背景色 */
+  border-bottom: 1px solid #1a2635;
   display: flex;
-  gap: 8px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fff;
+  gap: 4px;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .tab-btn {
-  padding: 8px 16px;
+  padding: 16px 24px;
+  background: transparent;
   border: none;
-  background: none;
-  border-radius: 6px;
+  border-bottom: 2px solid transparent;
+  color: #a0aec0; /* 次要文本颜色 */
   cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: #606266;
-  transition: all 0.3s ease;
-  font-size: 14px;
+  gap: 8px;
 }
 
 .tab-btn:hover {
-  background: #f5f7fa;
-  color: #409eff;
+  color: #ffffff;
 }
 
 .tab-btn.active {
-  background: #ecf5ff;
-  color: #409eff;
-  font-weight: 500;
+  color: #00e5b0; /* 主色调 */
+  border-bottom-color: #00e5b0;
 }
 
 .tab-icon {
-  font-size: 16px;
+  font-size: 1.2rem;
 }
 
+/* 内容区域样式优化 */
 .content-display {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  background: #fff;
+  padding: 24px;
+  background: #0a1219; /* 深色背景 */
 }
 
 .content-section {
-  background: #fff;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  border: 1px solid #f0f0f0;
+  background: #111a24; /* 卡片背景色 */
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid #1a2635;
+  transition: transform 0.3s ease;
+  color: #ffffff;
+}
+
+.content-section:hover {
+  transform: translateY(-2px);
 }
 
 .content-placeholder {
-  text-align: center;
-  padding: 20px;
+  text-align: left;
 }
 
 .content-placeholder h3 {
+  color: #ffffff;
+  font-size: 1.25rem;
   margin-bottom: 16px;
-  color: #303133;
-  font-size: 18px;
+  font-weight: 600;
 }
 
 .content-placeholder p {
-  color: #606266;
-  margin-bottom: 20px;
-  font-size: 14px;
+  color: #a0aec0; /* 次要文本颜色 */
+  margin-bottom: 24px;
+  line-height: 1.6;
 }
 
 .placeholder-content {
-  background: #f5f7fa;
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   padding: 20px;
-  text-align: left;
+}
+
+.placeholder-content p {
+  color: #00e5b0; /* 主色调 */
+  font-weight: 500;
+  margin-bottom: 16px;
 }
 
 .placeholder-content ul {
   list-style: none;
   padding: 0;
-  margin: 16px 0 0 0;
+  margin: 0;
 }
 
 .placeholder-content li {
-  padding: 8px 0;
-  color: #606266;
-  border-bottom: 1px dashed #e4e7ed;
-  font-size: 14px;
+  color: #a0aec0; /* 次要文本颜色 */
+  padding: 12px 0;
+  border-bottom: 1px solid #1a2635;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.placeholder-content li:before {
+  content: "•";
+  color: #00e5b0; /* 主色调 */
 }
 
 .placeholder-content li:last-child {
   border-bottom: none;
 }
 
+/* 图片展示区域样式 */
 .image-placeholder {
-  background: #f5f7fa;
-  border-radius: 8px;
+  background: #111a24; /* 卡片背景色 */
+  border-radius: 12px;
   padding: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  margin-top: 20px;
+  gap: 20px;
+  border: 2px dashed #1a2635;
 }
 
 .placeholder-icon {
   font-size: 48px;
-  color: #909399;
+  color: #00e5b0; /* 主色调 */
+  opacity: 0.5;
 }
 
+/* 表格区域样式 */
 .table-display {
-  background: #fff;
-  border-radius: 8px;
-  padding: 20px;
-  height: 100%;
+  background: #111a24; /* 卡片背景色 */
+  border-radius: 12px;
+  padding: 24px;
+  color: #ffffff;
 }
 
 .table-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #1a2635;
 }
 
 .table-header h4 {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
   margin: 0;
-  font-size: 16px;
-  color: #303133;
 }
 
 .table-actions {
   display: flex;
-  gap: 8px;
+  gap: 12px;
 }
 
 .action-btn {
-  padding: 8px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  background: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #1a2635;
+  color: #a0aec0; /* 次要文本颜色 */
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #606266;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn:hover {
-  background: #f5f7fa;
-  border-color: #c0c4cc;
-  color: #409eff;
+  background: rgba(255, 255, 255, 0.1);
+  color: #00e5b0; /* 主色调 */
+  transform: translateY(-2px);
 }
 
 .table-content {
-  min-height: 200px;
-  border: 1px solid #f0f0f0;
+  background: #0a1219; /* 深色背景 */
   border-radius: 8px;
-  overflow: hidden;
+  min-height: 200px;
 }
 
 .table-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   padding: 40px;
-  background: #f5f7fa;
-  border-radius: 8px;
-  gap: 16px;
-  height: 100%;
+  text-align: center;
+}
+
+.table-placeholder .placeholder-icon {
+  margin-bottom: 16px;
+}
+
+.table-placeholder p {
+  color: #ffffff;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
 }
 
 .table-placeholder .note {
-  color: #909399;
+  color: #a0aec0; /* 次要文本颜色 */
+  font-size: 0.9rem;
+}
+
+/* 滚动条美化 */
+.viewer-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.viewer-content::-webkit-scrollbar-track {
+  background: #0a1219; /* 深色背景 */
+}
+
+.viewer-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.viewer-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 测量结果样式 */
+.measurement-result {
+  background: #111a24; /* 卡片背景色 */
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #1a2635;
+}
+
+.measurement-value {
   font-size: 14px;
+  font-weight: 500;
 }
 </style>
